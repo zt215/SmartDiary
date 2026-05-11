@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.back.mapper.CommentLikeMapper">
+
+    <resultMap id="CommentLikeResultMap" type="org.example.back.pojo.CommentLike">
+        <id property="id" column="id"/>
+        <result property="commentId" column="comment_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 插入点赞记录 -->
+    <insert id="insert" parameterType="org.example.back.pojo.CommentLike" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comment_like (comment_id, user_id, create_time)
+        VALUES (#{commentId}, #{userId}, NOW())
+    </insert>
+
+    <!-- 删除点赞记录 -->
+    <delete id="deleteByCommentIdAndUserId">
+        DELETE FROM comment_like 
+        WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </delete>
+
+    <!-- 查询用户是否已点赞某评论 -->
+    <select id="selectByCommentIdAndUserId" resultMap="CommentLikeResultMap">
+        SELECT * FROM comment_like 
+        WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </select>
+
+    <!-- 根据评论 ID 查询所有点赞记录 -->
+    <select id="selectByCommentId" resultMap="CommentLikeResultMap">
+        SELECT * FROM comment_like 
+        WHERE comment_id = #{commentId}
+    </select>
+
+</mapper>

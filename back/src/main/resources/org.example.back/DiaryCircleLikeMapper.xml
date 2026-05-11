@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.back.mapper.DiaryCircleLikeMapper">
+
+    <resultMap id="DiaryCircleLikeResultMap" type="org.example.back.pojo.DiaryCircleLike">
+        <id property="id" column="id"/>
+        <result property="diaryCircleId" column="diary_circle_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 插入点赞记录 -->
+    <insert id="insert" parameterType="org.example.back.pojo.DiaryCircleLike" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO diary_circle_like (diary_circle_id, user_id, create_time)
+        VALUES (#{diaryCircleId}, #{userId}, NOW())
+    </insert>
+
+    <!-- 删除点赞记录 -->
+    <delete id="deleteByDiaryCircleIdAndUserId">
+        DELETE FROM diary_circle_like 
+        WHERE diary_circle_id = #{diaryCircleId} AND user_id = #{userId}
+    </delete>
+
+    <!-- 查询用户是否已点赞某动态 -->
+    <select id="selectByDiaryCircleIdAndUserId" resultMap="DiaryCircleLikeResultMap">
+        SELECT * FROM diary_circle_like 
+        WHERE diary_circle_id = #{diaryCircleId} AND user_id = #{userId}
+    </select>
+
+</mapper>
