@@ -1,0 +1,2 @@
+# SmartDiary
+字迹
