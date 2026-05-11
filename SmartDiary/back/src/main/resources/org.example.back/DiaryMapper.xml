@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.back.mapper.DiaryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="DiaryResultMap" type="org.example.back.pojo.Diary">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 插入日记 -->
+    <insert id="insert" parameterType="org.example.back.pojo.Diary" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO diary(user_id, title, content, create_time, update_time)
+        VALUES(#{userId}, #{title}, #{content}, #{createTime}, #{updateTime})
+    </insert>
+
+    <!-- 根据ID查询日记 -->
+    <select id="findById" parameterType="int" resultMap="DiaryResultMap">
+        SELECT * FROM diary WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户ID查询所有日记 -->
+    <select id="findByUserId" parameterType="int" resultMap="DiaryResultMap">
+        SELECT * FROM diary WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据用户ID和日期范围查询日记 -->
+    <select id="findByUserIdAndDateRange" resultMap="DiaryResultMap">
+        SELECT * FROM diary 
+        WHERE user_id = #{userId} 
+        AND create_time BETWEEN #{startDate} AND #{endDate}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 更新日记 -->
+    <update id="update" parameterType="org.example.back.pojo.Diary">
+        UPDATE diary
+        SET 
+            title = #{title},
+            content = #{content},
+            update_time = #{updateTime}
+            <if test="createTime != null">
+                , create_time = #{createTime}
+            </if>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除日记 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM diary WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户ID和关键词搜索日记 -->
+    <select id="searchByKeyword" resultMap="DiaryResultMap">
+        SELECT * FROM diary 
+        WHERE user_id = #{userId} 
+        AND (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
