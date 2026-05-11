@@ -2,6 +2,7 @@
   "name": "smartdiary",
   "version": "0.8.2",
   "private": true,
+  "author": { "name": "ZT/YZW" },
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
