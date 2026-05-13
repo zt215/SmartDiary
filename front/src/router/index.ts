@@ -49,6 +49,11 @@ const router = createRouter({
       name:'diaryCircleDetail',
       component: () => import('@/views/diaryCircleDetail.vue'),
     },
+    {
+      path: '/friends',
+      name: 'friends',
+      component: () => import('@/views/friends.vue'),
+    },
     
   ],
 })

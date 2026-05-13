@@ -88,19 +88,16 @@
                                 />
                             </el-form-item>
                             
-                            <el-form-item label="地区">
-                                <el-select 
-                                    v-model="form.region" 
-                                    placeholder="请选择地区" 
+                            <el-form-item label="所在地区">
+                                <el-cascader
+                                    v-model="addressCodes"
+                                    :options="regionData"
+                                    :props="{ expandTrigger: 'hover' }"
+                                    placeholder="请选择省 / 市 / 区"
+                                    clearable
+                                    filterable
                                     style="width: 100%"
-                                >
-                                    <el-option label="北京" value="beijing" />
-                                    <el-option label="上海" value="shanghai" />
-                                    <el-option label="广州" value="guangzhou" />
-                                    <el-option label="深圳" value="shenzhen" />
-                                    <el-option label="杭州" value="hangzhou" />
-                                    <el-option label="其他" value="other" />
-                                </el-select>
+                                />
                             </el-form-item>
                             
                             <el-form-item label="密码">
@@ -148,14 +145,15 @@ import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '@/api/auth'
 import service from '@/api/auth'
+import { regionData } from 'element-china-area-data'
+import { cascaderValueToStorage } from '@/utils/regionAddress'
 import {
   ElForm,
   ElFormItem,
   ElInput,
   ElButton,
   ElDatePicker,
-  ElSelect,
-  ElOption,
+  ElCascader,
   ElMessage
 } from 'element-plus'
 
@@ -165,12 +163,13 @@ const isSendingCode = ref(false) // 是否正在发送验证码
 const countdown = ref(0) // 倒计时
 const registerSuccess = ref(false) // 注册成功状态
 
+const addressCodes = ref([])
+
 const form = reactive({
     phone: '',
     verificationCode: '',
     nickname: '',
     birthday: '',
-    region: '',
     password: '',
     confirmPassword: ''
 })
@@ -310,7 +309,13 @@ const handleRegister = async () => {
         ElMessage.error('两次输入的密码不一致')
         return
     }
-    
+
+    const addressStored = cascaderValueToStorage(addressCodes.value)
+    if (!addressStored) {
+        ElMessage.error('请选择所在地区（省 / 市 / 区）')
+        return
+    }
+
     try {
         // 生成默认头像
         const defaultAvatar = generateDefaultAvatar()
@@ -321,7 +326,7 @@ const handleRegister = async () => {
             password: form.password,
             phone: form.phone,
             birthday: form.birthday,
-            address: form.region,
+            address: addressStored,
             avatar: defaultAvatar
         }
 

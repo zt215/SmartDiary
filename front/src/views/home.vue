@@ -16,6 +16,7 @@
         <button class="search-btn" @click="loadDiaries">搜索</button>
       </div>
       <div class="top-functions">
+        <button class="function-btn" @click="goToFriends">好友</button>
         <button class="function-btn" @click="goToDiaryCircle">字迹圈</button>
         <button class="function-btn" @click="goToSettings">个人设置</button>
         <button class="function-btn" @click="handleLogout">退出登录</button>
@@ -668,6 +669,9 @@ export default {
     goToDiaryCircle() {
       // 跳转到字迹圈页面
       this.$router.push('/diary-circle');
+    },
+    goToFriends() {
+      this.$router.push('/friends');
     },
     handleLogout() {
       // 退出登录

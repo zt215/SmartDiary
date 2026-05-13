@@ -56,7 +56,7 @@
             </div>
             <div class="info-item">
               <label class="info-label">地址</label>
-              <div class="info-value">{{ user.address || '未设置' }}</div>
+              <div class="info-value">{{ formatRegionAddressLabel(user.address) || '未设置' }}</div>
             </div>
           </template>
 
@@ -105,8 +105,16 @@
                   style="width: 100%"
                 />
               </el-form-item>
-              <el-form-item label="地址">
-                <el-input v-model="editForm.address" placeholder="请输入地址" />
+              <el-form-item label="所在地区">
+                <el-cascader
+                  v-model="addressCascaderValue"
+                  :options="regionData"
+                  :props="{ expandTrigger: 'hover' }"
+                  placeholder="请选择省 / 市 / 区"
+                  clearable
+                  filterable
+                  style="width: 100%"
+                />
               </el-form-item>
             </el-form>
           </template>
@@ -133,7 +141,14 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { regionData } from 'element-china-area-data'
 import { updateUser, deleteUser } from '../api/auth'
+import {
+  formatRegionAddressLabel,
+  parseRegionCodesToCascaderValue,
+  cascaderValueToStorage,
+  isStoredRegionCodes
+} from '../utils/regionAddress'
 
 export default {
   name: 'SettingsView',
@@ -156,6 +171,8 @@ export default {
       address: '',
       avatar: ''
     })
+
+    const addressCascaderValue = ref([])
 
     // 加载用户信息
     const loadUserInfo = () => {
@@ -192,11 +209,13 @@ export default {
         address: user.value.address || '',
         avatar: user.value.avatar || ''
       }
+      addressCascaderValue.value = parseRegionCodesToCascaderValue(user.value.address || '')
     }
 
     // 取消编辑
     const cancelEdit = () => {
       isEditing.value = false
+      addressCascaderValue.value = []
       editForm.value = {
         name: '',
         phone: '',
@@ -286,12 +305,20 @@ export default {
 
       saving.value = true
       try {
+        const rawAddr = user.value.address || ''
+        let addressStored = cascaderValueToStorage(addressCascaderValue.value)
+        if (!addressStored && rawAddr && !isStoredRegionCodes(rawAddr)) {
+          addressStored = rawAddr
+        }
+        if (!addressStored) {
+          addressStored = null
+        }
         const res = await updateUser({
           id: user.value.id,
           name: editForm.value.name.trim(),
           phone: editForm.value.phone,
           birthday: editForm.value.birthday || null,
-          address: editForm.value.address.trim() || null,
+          address: addressStored,
           avatar: editForm.value.avatar || null
         })
 
@@ -302,7 +329,7 @@ export default {
             ...user.value,
             name: editForm.value.name.trim(),
             birthday: editForm.value.birthday || null,
-            address: editForm.value.address.trim() || null,
+            address: addressStored,
             avatar: editForm.value.avatar || null
           }
           // 更新localStorage
@@ -403,6 +430,9 @@ export default {
       isEditing,
       saving,
       editForm,
+      regionData,
+      addressCascaderValue,
+      formatRegionAddressLabel,
       formatDate,
       enterEditMode,
       cancelEdit,
