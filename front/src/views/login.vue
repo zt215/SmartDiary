@@ -1,5 +1,14 @@
 <template>
   <div class="background login">
+    <!-- 视频背景 -->
+    <div class="video-background">
+      <video autoplay muted loop playsinline class="background-video">
+        <source src="/背景.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+      </video>
+      <div class="video-overlay"></div>
+    </div>
+    
     <!-- 左侧栏 -->
     <div class="left">
       <h1 class="title" :class="{ show: showTitle }">时光流转</h1>
@@ -47,7 +56,7 @@
         </div>
         <el-button
           type="primary"
-          style="width: 44%; height: 40px; margin-top: 30px; border-radius: 20px; font-size: 18px;"
+          style="width: 44%; height: 40px; margin-top: 30px; border-radius: 20px; font-size: 18px; background: linear-gradient(135deg, #2985fe, #5ed1ff); border: none; box-shadow: 0 4px 15px rgba(41, 133, 254, 0.3);"
           @click="login"
         >开始跃迁</el-button>
       </div>
@@ -122,13 +131,46 @@ const login = async () => {
 </script>
 <style scoped>
 .background {
-  background-color: white;
-  height: 92vh;
+  position: relative;
+  height: 100vh;
   overflow: hidden;
 }
+
+/* 视频背景样式 */
+.video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2); /* 减少覆盖层透明度，让视频更清晰 */
+}
+
 .left {
   width: 50%;
-  height: 95vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -136,6 +178,7 @@ const login = async () => {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 1;
 }
 .title {
   font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
@@ -145,6 +188,7 @@ const login = async () => {
   -webkit-text-fill-color: transparent;
   margin: auto;
   margin-bottom: 0;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4); /* 增强文字阴影，提高可读性 */
 }
 .subtitle {
   font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
@@ -154,6 +198,7 @@ const login = async () => {
   -webkit-text-fill-color: transparent;
   margin: auto;
   margin-top: 40px;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
 }
 .welcome {
   font-size: 30px;
@@ -164,11 +209,12 @@ const login = async () => {
   margin: auto;
   margin-top: 0;
   margin-left: 70%;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
 }
 .right {
   width: 40%;
-  height: 95vh;
-  background: linear-gradient(135deg, #2985fe, #5ed1ff);
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(41, 133, 254, 0.7), rgba(94, 209, 255, 0.7));
   border-top-left-radius: 100px;
   border-bottom-left-radius: 100px;
   padding: 20px;
@@ -178,6 +224,10 @@ const login = async () => {
   opacity: 0;
   transform: translateX(100px);
   transition: opacity 1s, transform 1s;
+  z-index: 1;
+  backdrop-filter: blur(10px); /* 增加毛玻璃效果强度 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 添加白色边框增强视觉效果 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 添加阴影增强层次感 */
 }
 .title, .subtitle, .welcome {
   opacity: 0;
@@ -198,6 +248,7 @@ const login = async () => {
   -webkit-text-fill-color: transparent;
   text-align: center;
   margin-top: 30%;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
 }
 .form {
   display: flex;
@@ -211,12 +262,22 @@ const login = async () => {
   display: flex;
   align-items: center;
 }
+.account-select :deep(.el-input) {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  overflow: hidden;
+}
 .password-box {
   position: relative;
   width: 60%;
   margin-top: 20px;
   display: flex;
   align-items: center;
+}
+.password-box :deep(.el-input) {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  overflow: hidden;
 }
 .bottom{
   display: flex;
@@ -230,5 +291,36 @@ const login = async () => {
 .bottom :deep(.el-button) {
   font-size: 20px;
   color: #fff;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .title, .subtitle {
+    font-size: 60px;
+  }
+  .logo {
+    font-size: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  .left, .right {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+  .right {
+    border-radius: 50px;
+    margin: 20px;
+    right: 0;
+  }
+  .title, .subtitle {
+    font-size: 40px;
+  }
+  .logo {
+    font-size: 50px;
+    margin-top: 20%;
+  }
 }
 </style>

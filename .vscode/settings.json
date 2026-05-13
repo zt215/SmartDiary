@@ -1,0 +1,10 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.home": "C:\\Users\\周涛\\.jdk\\jdk-25.0.2",
+    "java.jdt.ls.java.home": "C:\\Users\\周涛\\.jdk\\jdk-25.0.2",
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": true,
+    "java.errors.incompleteClasspath.severity": "ignore",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.debug.settings.onBuildFailureProceed": true
+}
