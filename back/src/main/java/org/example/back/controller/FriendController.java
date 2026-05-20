@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/friends")
-@CrossOrigin(origins = "*")
+@RequestMapping("/friends")
+@CrossOrigin(origins = "http://localhost:5173")
 public class FriendController {
 
     @Autowired

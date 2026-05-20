@@ -55,13 +55,10 @@
                                 </div>
                             </el-form-item>
                             
-                            <el-button 
-                                type="primary" 
-                                native-type="submit" 
-                                class="reset-btn"
-                            >
-                                下一步
-                            </el-button>
+                            <div class="form-actions">
+                                <el-button type="info" @click="goToLogin">返回</el-button>
+                                <el-button type="primary" native-type="submit">下一步</el-button>
+                            </div>
                         </el-form>
                     </div>
                     <!-- 第二步：重置密码 -->
@@ -90,7 +87,7 @@
                                     type="info" 
                                     @click="step = 1"
                                 >
-                                    上一步
+                                    返回
                                 </el-button>
                                 <el-button 
                                     type="primary" 
@@ -120,6 +117,11 @@ import {
 import service, { forgotPassword } from '@/api/auth'
 
 const router = useRouter()
+
+const goToLogin = () => {
+    router.push('/')
+}
+
 const step = ref(1) // 1: 手机号验证
 const isSendingCode = ref(false) // 是否正在发送验证码
 const countdown = ref(0) // 倒计时

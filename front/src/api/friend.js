@@ -2,7 +2,7 @@ import service from './auth'
 
 export function searchFriendUser (userId, phone) {
   return service({
-    url: '/api/friends/search-user',
+    url: '/friends/search-user',
     method: 'get',
     params: { userId, phone }
   })
@@ -10,7 +10,7 @@ export function searchFriendUser (userId, phone) {
 
 export function sendFriendRequest (fromUserId, toUserId) {
   return service({
-    url: '/api/friends/request',
+    url: '/friends/request',
     method: 'post',
     data: { fromUserId, toUserId }
   })
@@ -18,7 +18,7 @@ export function sendFriendRequest (fromUserId, toUserId) {
 
 export function acceptFriendRequest (userId, requestId) {
   return service({
-    url: '/api/friends/accept',
+    url: '/friends/accept',
     method: 'post',
     data: { userId, requestId }
   })
@@ -26,7 +26,7 @@ export function acceptFriendRequest (userId, requestId) {
 
 export function rejectFriendRequest (userId, requestId) {
   return service({
-    url: '/api/friends/reject',
+    url: '/friends/reject',
     method: 'post',
     data: { userId, requestId }
   })
@@ -34,7 +34,7 @@ export function rejectFriendRequest (userId, requestId) {
 
 export function listFriends (userId) {
   return service({
-    url: '/api/friends/list',
+    url: '/friends/list',
     method: 'get',
     params: { userId }
   })
@@ -42,7 +42,7 @@ export function listFriends (userId) {
 
 export function listIncomingFriendRequests (userId) {
   return service({
-    url: '/api/friends/incoming',
+    url: '/friends/incoming',
     method: 'get',
     params: { userId }
   })
@@ -50,7 +50,7 @@ export function listIncomingFriendRequests (userId) {
 
 export function listOutgoingFriendRequests (userId) {
   return service({
-    url: '/api/friends/outgoing',
+    url: '/friends/outgoing',
     method: 'get',
     params: { userId }
   })
@@ -58,7 +58,7 @@ export function listOutgoingFriendRequests (userId) {
 
 export function removeFriend (userId, friendUserId) {
   return service({
-    url: '/api/friends/remove',
+    url: '/friends/remove',
     method: 'delete',
     params: { userId, friendUserId }
   })
