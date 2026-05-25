@@ -2,6 +2,7 @@ package org.example.back.controller;
 
 import org.example.back.pojo.DiaryCircle;
 import org.example.back.service.DiaryCircleService;
+import org.example.back.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,9 @@ public class DiaryCircleController {
 
     @Autowired
     private DiaryCircleService diaryCircleService;
+
+    @Autowired
+    private FriendService friendService;
 
     /**
      * 发布新动态
@@ -81,10 +85,11 @@ public class DiaryCircleController {
     public Map<String, Object> getList(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @RequestParam(value = "userId", required = false) Integer userId) {
+            @RequestParam(value = "userId", required = false) Integer userId,
+            @RequestParam(value = "filter", defaultValue = "all") String filter) {
         Map<String, Object> result = new HashMap<>();
         try {
-            List<DiaryCircle> list = diaryCircleService.getAllWithLikeStatus(page, pageSize, userId);
+            List<DiaryCircle> list = diaryCircleService.getAllWithLikeStatus(page, pageSize, userId, filter);
             result.put("success", true);
             result.put("data", list);
             result.put("total", list.size());
@@ -121,9 +126,16 @@ public class DiaryCircleController {
      * 查询用户的动态
      */
     @GetMapping("/user/{userId}")
-    public Map<String, Object> getByUserId(@PathVariable("userId") Integer userId) {
+    public Map<String, Object> getByUserId(@PathVariable("userId") Integer userId,
+                                           @RequestParam(value = "viewerId", required = false) Integer viewerId) {
         Map<String, Object> result = new HashMap<>();
         try {
+            if (viewerId != null && !viewerId.equals(userId)
+                    && !friendService.areFriends(viewerId, userId)) {
+                result.put("success", false);
+                result.put("message", "仅可查看好友的字迹");
+                return result;
+            }
             List<DiaryCircle> list = diaryCircleService.getByUserId(userId);
             result.put("success", true);
             result.put("data", list);

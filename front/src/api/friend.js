@@ -63,3 +63,11 @@ export function removeFriend (userId, friendUserId) {
     params: { userId, friendUserId }
   })
 }
+
+export function getFriendProfile (userId, friendUserId) {
+  return service({
+    url: '/friends/profile',
+    method: 'get',
+    params: { userId, friendUserId }
+  })
+}

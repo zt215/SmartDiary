@@ -39,7 +39,7 @@ public interface DiaryCircleService {
     /**
      * 查询动态列表（带点赞状态）
      */
-    java.util.List<DiaryCircle> getAllWithLikeStatus(int page, int pageSize, Integer currentUserId);
+    java.util.List<DiaryCircle> getAllWithLikeStatus(int page, int pageSize, Integer currentUserId, String filter);
     
     /**
      * 增加评论数

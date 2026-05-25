@@ -1,5 +1,7 @@
 package org.example.back.pojo;
 
+import java.util.Date;
+
 /**
  * 好友/申请人简要信息（不含密码）
  */
@@ -10,6 +12,8 @@ public class FriendUserBrief {
     private String avatar;
     /** 关联的好友申请 id（列表接口使用） */
     private Integer requestId;
+    /** 好友最新字迹圈发布时间 */
+    private Date latestDiaryTime;
 
     public Integer getId() {
         return id;
@@ -49,5 +53,13 @@ public class FriendUserBrief {
 
     public void setRequestId(Integer requestId) {
         this.requestId = requestId;
+    }
+
+    public Date getLatestDiaryTime() {
+        return latestDiaryTime;
+    }
+
+    public void setLatestDiaryTime(Date latestDiaryTime) {
+        this.latestDiaryTime = latestDiaryTime;
     }
 }

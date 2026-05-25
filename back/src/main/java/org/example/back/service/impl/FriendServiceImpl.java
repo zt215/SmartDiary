@@ -230,4 +230,42 @@ public class FriendServiceImpl implements FriendService {
         result.put("data", u);
         return result;
     }
+
+    @Override
+    public Map<String, Object> getFriendProfile(Integer userId, Integer friendUserId) {
+        Map<String, Object> result = new HashMap<>();
+        if (userId == null || friendUserId == null) {
+            result.put("success", false);
+            result.put("message", "参数不完整");
+            return result;
+        }
+        if (userId.equals(friendUserId)) {
+            result.put("success", false);
+            result.put("message", "参数无效");
+            return result;
+        }
+        if (friendMapper.countAcceptedBetweenUsers(userId, friendUserId) <= 0) {
+            result.put("success", false);
+            result.put("message", "对方不是您的好友");
+            return result;
+        }
+        User u = userMapper.findById(friendUserId);
+        if (u == null) {
+            result.put("success", false);
+            result.put("message", "用户不存在");
+            return result;
+        }
+        u.setPassword(null);
+        result.put("success", true);
+        result.put("data", u);
+        return result;
+    }
+
+    @Override
+    public boolean areFriends(Integer userId, Integer friendUserId) {
+        if (userId == null || friendUserId == null || userId.equals(friendUserId)) {
+            return false;
+        }
+        return friendMapper.countAcceptedBetweenUsers(userId, friendUserId) > 0;
+    }
 }

@@ -51,6 +51,21 @@
         LIMIT #{offset}, #{limit}
     </select>
 
+    <!-- 分页查询好友的动态（带用户信息） -->
+    <select id="selectFriendsWithUser" resultMap="DiaryCircleResultMap">
+        SELECT dc.*, u.name, u.avatar
+        FROM diary_circle dc
+        LEFT JOIN user u ON dc.user_id = u.id
+        WHERE dc.user_id IN (
+            SELECT CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END
+            FROM friend_request fr
+            WHERE fr.status = 1
+              AND (fr.from_user_id = #{userId} OR fr.to_user_id = #{userId})
+        )
+        ORDER BY dc.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
     <!-- 查询用户的动态 -->
     <select id="selectByUserId" resultMap="DiaryCircleResultMap">
         SELECT dc.*, u.name, u.avatar

@@ -5,8 +5,8 @@ const BASE_URL = 'http://localhost:3000/api/diary-circle'
 /**
  * 获取动态列表
  */
-export function getDiaryCircleList(page = 1, pageSize = 10, userId = null) {
-  const params = { page, pageSize }
+export function getDiaryCircleList(page = 1, pageSize = 10, userId = null, filter = 'all') {
+  const params = { page, pageSize, filter }
   if (userId !== null && userId !== undefined) {
     params.userId = userId
   }
@@ -52,7 +52,11 @@ export function deleteDiaryCircle(id, userId) {
 /**
  * 获取用户的动态
  */
-export function getUserDiaries(userId) {
-  return axios.get(`${BASE_URL}/user/${userId}`)
+export function getUserDiaries(userId, viewerId = null) {
+  const params = {}
+  if (viewerId !== null && viewerId !== undefined) {
+    params.viewerId = viewerId
+  }
+  return axios.get(`${BASE_URL}/user/${userId}`, { params })
     .then(res => res.data)
 }

@@ -16,7 +16,15 @@
         <button class="search-btn" @click="loadDiaries">搜索</button>
       </div>
       <div class="top-functions">
-        <button class="function-btn" @click="goToFriends">好友</button>
+        <button class="function-btn friends-btn" @click="goToFriends">
+          <span
+            v-if="newFriendDiaryCount > 0"
+            class="friend-badge"
+            :class="{ 'friend-badge--offset': incomingFriendCount > 0 }"
+          >{{ newFriendDiaryBadgeText }}</span>
+          <span v-if="incomingFriendCount > 0" class="friend-badge">{{ incomingFriendBadgeText }}</span>
+          <span class="friends-btn-text">好友</span>
+        </button>
         <button class="function-btn" @click="goToDiaryCircle">字迹圈</button>
         <button class="function-btn" @click="goToSettings">个人设置</button>
         <button class="function-btn" @click="handleLogout">退出登录</button>
@@ -212,6 +220,8 @@
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getDiariesByUserId, searchDiaries, createDiary, deleteDiary } from '../api/diary';
 import { updateTheme } from '../api/auth';
+import { listIncomingFriendRequests, listFriends } from '../api/friend';
+import { countFriendsWithNewDiary } from '@/utils/friendDiarySeen';
 
 export default {
   name: 'HomeView',
@@ -250,10 +260,20 @@ export default {
         earliestDate: null,
         latestDate: null,
         monthlyCounts: []
-      }
+      },
+      incomingFriendCount: 0,
+      newFriendDiaryCount: 0
     };
   },
   computed: {
+    incomingFriendBadgeText () {
+      if (this.incomingFriendCount > 99) return '99+'
+      return String(this.incomingFriendCount)
+    },
+    newFriendDiaryBadgeText () {
+      if (this.newFriendDiaryCount > 99) return '99+'
+      return String(this.newFriendDiaryCount)
+    },
     filteredDiaries() {
       // 只有当用户点击搜索按钮后（isSearching为true），才返回搜索结果
       if (this.isSearching && this.searchQuery && this.searchQuery.trim() !== '') {
@@ -379,6 +399,8 @@ export default {
     // 如果用户已登录，加载日记数据（加载完成后再根据 URL 恢复从详情返回的日历日期）
     if (this.user && this.user.id) {
       this.loadDiaries().then(() => this.applyReturnDateFromRoute());
+      this.refreshIncomingFriendBadge();
+      this.refreshNewFriendDiaryBadge();
     } else {
       ElMessage.warning('请先登录');
       this.$router.push('/');
@@ -672,6 +694,28 @@ export default {
     },
     goToFriends() {
       this.$router.push('/friends');
+    },
+    async refreshIncomingFriendBadge () {
+      if (!this.currentUserId) return
+      try {
+        const res = await listIncomingFriendRequests(this.currentUserId)
+        if (res && res.success) {
+          this.incomingFriendCount = (res.data || []).length
+        }
+      } catch (e) {
+        console.error('加载好友申请数量失败:', e)
+      }
+    },
+    async refreshNewFriendDiaryBadge () {
+      if (!this.currentUserId) return
+      try {
+        const res = await listFriends(this.currentUserId)
+        if (res && res.success) {
+          this.newFriendDiaryCount = countFriendsWithNewDiary(this.currentUserId, res.data || [])
+        }
+      } catch (e) {
+        console.error('加载好友新字迹提醒失败:', e)
+      }
     },
     handleLogout() {
       // 退出登录
@@ -1112,6 +1156,39 @@ export default {
   border: none;
   color: #fff;
   cursor: pointer;
+}
+
+.friends-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.friends-btn-text {
+  position: relative;
+}
+
+.friend-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  color: #fff;
+  background: #f56c6c;
+  border-radius: 9px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.friend-badge--offset {
+  right: 22px;
 }
 
 .username{

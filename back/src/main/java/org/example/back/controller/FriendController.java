@@ -57,4 +57,10 @@ public class FriendController {
                                           @RequestParam("phone") String phone) {
         return friendService.searchByPhone(userId, phone);
     }
+
+    @GetMapping("/profile")
+    public Map<String, Object> profile(@RequestParam("userId") Integer userId,
+                                       @RequestParam("friendUserId") Integer friendUserId) {
+        return friendService.getFriendProfile(userId, friendUserId);
+    }
 }

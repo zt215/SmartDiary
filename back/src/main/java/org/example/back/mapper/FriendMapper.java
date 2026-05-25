@@ -71,7 +71,11 @@ public interface FriendMapper {
                    CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END AS id,
                    u.name AS name,
                    u.phone AS phone,
-                   u.avatar AS avatar
+                   u.avatar AS avatar,
+                   (SELECT MAX(dc.create_time)
+                    FROM diary_circle dc
+                    WHERE dc.user_id = CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END
+                   ) AS latestDiaryTime
             FROM friend_request fr
             JOIN user u ON u.id = CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END
             WHERE fr.status = 1 AND (fr.from_user_id = #{userId} OR fr.to_user_id = #{userId})
@@ -88,4 +92,13 @@ public interface FriendMapper {
               AND ((from_user_id = #{a} AND to_user_id = #{b}) OR (from_user_id = #{b} AND to_user_id = #{a}))
             """)
     int deleteAcceptedBetween(@Param("a") Integer a, @Param("b") Integer b);
+
+    @Select("""
+            SELECT COUNT(1) FROM friend_request
+            WHERE status = 1
+              AND ((from_user_id = #{userId} AND to_user_id = #{friendUserId})
+                OR (from_user_id = #{friendUserId} AND to_user_id = #{userId}))
+            """)
+    int countAcceptedBetweenUsers(@Param("userId") Integer userId,
+                                  @Param("friendUserId") Integer friendUserId);
 }

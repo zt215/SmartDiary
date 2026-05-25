@@ -14,6 +14,25 @@
       </div>
     </header>
 
+    <div class="feed-filter-bar">
+      <button
+        type="button"
+        class="filter-btn"
+        :class="{ active: feedFilter === 'all' }"
+        @click="switchFeedFilter('all')"
+      >
+        全部
+      </button>
+      <button
+        type="button"
+        class="filter-btn"
+        :class="{ active: feedFilter === 'friends' }"
+        @click="switchFeedFilter('friends')"
+      >
+        好友
+      </button>
+    </div>
+
     <div class="circle-body-scroll">
       <!-- 发布框 -->
       <div v-if="showPublishBox" class="publish-box">
@@ -89,7 +108,7 @@
         <!-- 空状态提示 -->
         <div v-if="diaryList.length === 0" class="empty-state">
           <div class="empty-icon">📝</div>
-          <p class="empty-text">暂无动态，快来发布第一篇日记吧！</p>
+          <p class="empty-text">{{ emptyText }}</p>
         </div>
       </div>
 
@@ -120,8 +139,17 @@ export default {
       pageSize: 10,
       hasMore: true,
       loading: false,
-      showPublishBox: false
+      showPublishBox: false,
+      feedFilter: 'all'
     };
+  },
+  computed: {
+    emptyText () {
+      if (this.feedFilter === 'friends') {
+        return '好友还没有发布动态，去添加好友或看看全部动态吧'
+      }
+      return '暂无动态，快来发布第一篇日记吧！'
+    }
   },
   mounted() {
     // 获取用户信息
@@ -149,6 +177,14 @@ export default {
   methods: {
     goBack() {
       this.$router.push('/home');
+    },
+    switchFeedFilter (filter) {
+      if (this.feedFilter === filter) return
+      this.feedFilter = filter
+      this.page = 1
+      this.diaryList = []
+      this.hasMore = true
+      this.loadDiaries()
     },
     showPublishOptions() {
       ElMessageBox.confirm(
@@ -192,7 +228,7 @@ export default {
         const userId = userStr ? JSON.parse(userStr).id : null
         
         // 调用后端 API 加载日记
-        const res = await getDiaryCircleList(this.page, this.pageSize, userId);
+        const res = await getDiaryCircleList(this.page, this.pageSize, userId, this.feedFilter);
         
         if (res && res.success) {
           const newList = res.data || [];
@@ -251,11 +287,13 @@ export default {
             isLiked: false
           };
           
-          this.diaryList.unshift(newDiary);
+          if (this.feedFilter === 'all') {
+            this.diaryList.unshift(newDiary);
+          }
           this.newDiaryContent = '';
           this.showPublishBox = false;
           
-          ElMessage.success('发布成功');
+          ElMessage.success(this.feedFilter === 'friends' ? '发布成功，可在「全部」中查看' : '发布成功');
         } else {
           ElMessage.error(res?.message || '发布失败');
         }
@@ -362,6 +400,36 @@ export default {
   z-index: 100;
   width: 100%;
   box-sizing: border-box;
+}
+
+.feed-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-color, #fff);
+  border-bottom: 1px solid var(--border-color, #e8e8e8);
+  flex-shrink: 0;
+}
+
+.filter-btn {
+  padding: 0.4rem 1.25rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-color, #333);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.filter-btn.active {
+  background: var(--calendar-today-bg, #3d8be4);
+  border-color: var(--calendar-today-bg, #3d8be4);
+  color: #fff;
+}
+
+.filter-btn:hover:not(.active) {
+  background: var(--hover-bg, #f0f0f0);
 }
 
 .circle-body-scroll {

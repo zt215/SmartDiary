@@ -33,6 +33,13 @@ public interface DiaryCircleMapper {
      * 分页查询所有动态（带用户信息）
      */
     List<DiaryCircle> selectAllWithUser(@Param("offset") Integer offset, @Param("limit") Integer limit);
+
+    /**
+     * 分页查询好友的动态（带用户信息）
+     */
+    List<DiaryCircle> selectFriendsWithUser(@Param("offset") Integer offset,
+                                            @Param("limit") Integer limit,
+                                            @Param("userId") Integer userId);
     
     /**
      * 查询用户的动态

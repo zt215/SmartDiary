@@ -86,9 +86,17 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
     }
     
     @Override
-    public List<DiaryCircle> getAllWithLikeStatus(int page, int pageSize, Integer currentUserId) {
+    public List<DiaryCircle> getAllWithLikeStatus(int page, int pageSize, Integer currentUserId, String filter) {
         int offset = (page - 1) * pageSize;
-        List<DiaryCircle> list = diaryCircleMapper.selectAllWithUser(offset, pageSize);
+        List<DiaryCircle> list;
+        if ("friends".equalsIgnoreCase(filter)) {
+            if (currentUserId == null) {
+                return List.of();
+            }
+            list = diaryCircleMapper.selectFriendsWithUser(offset, pageSize, currentUserId);
+        } else {
+            list = diaryCircleMapper.selectAllWithUser(offset, pageSize);
+        }
         
         // 设置当前用户的点赞状态
         if (currentUserId != null) {
