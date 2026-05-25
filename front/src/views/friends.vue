@@ -20,21 +20,21 @@
 
         <h2 class="section-title">添加好友</h2>
 
-        <p class="hint">输入对方注册时使用的完整手机号查找用户</p>
+        <p class="hint">输入 UID、邮箱或完整手机号查找用户</p>
 
         <div class="search-row">
 
           <el-input
 
-            v-model="phoneKeyword"
+            v-model="searchKeyword"
 
-            placeholder="手机号"
+            placeholder="UID / 邮箱 / 手机号"
 
             clearable
 
-            maxlength="20"
+            maxlength="64"
 
-            style="max-width: 280px"
+            style="max-width: 320px"
 
             @keyup.enter="handleSearch"
 
@@ -56,7 +56,9 @@
 
               <div class="name">{{ foundUser.name }}</div>
 
-              <div class="sub">{{ foundUser.phone }}</div>
+              <div class="sub">UID {{ foundUser.uid ?? '—' }}</div>
+              <div class="sub">{{ formatPrivateField(foundUser.phone, '手机号') }}</div>
+              <div class="sub">{{ formatPrivateField(foundUser.email, '邮箱') }}</div>
 
             </div>
 
@@ -92,7 +94,7 @@
 
                   <div class="name">{{ f.name }}</div>
 
-                  <div class="sub">{{ f.phone }}</div>
+                  <div class="sub">{{ formatFriendContact(f) }}</div>
 
                   <div class="view-hint">点击查看字迹</div>
 
@@ -139,7 +141,7 @@
 
                 <div class="name">{{ r.name }}</div>
 
-                <div class="sub">{{ r.phone }}</div>
+                <div class="sub">{{ formatFriendContact(r) }}</div>
 
               </div>
 
@@ -169,7 +171,7 @@
 
                 <div class="name">{{ r.name }}</div>
 
-                <div class="sub">{{ r.phone }}</div>
+                <div class="sub">{{ formatFriendContact(r) }}</div>
 
               </div>
 
@@ -261,8 +263,16 @@
           <span class="profile-value">{{ friendProfile.name || '未设置' }}</span>
         </div>
         <div class="profile-item">
+          <span class="profile-label">账号 UID</span>
+          <span class="profile-value">{{ friendProfile.uid ?? '未设置' }}</span>
+        </div>
+        <div class="profile-item">
           <span class="profile-label">手机号</span>
-          <span class="profile-value">{{ friendProfile.phone || '未设置' }}</span>
+          <span class="profile-value">{{ formatPrivateField(friendProfile.phone, '手机号') }}</span>
+        </div>
+        <div class="profile-item">
+          <span class="profile-label">邮箱</span>
+          <span class="profile-value">{{ formatPrivateField(friendProfile.email, '邮箱') }}</span>
         </div>
         <div class="profile-item">
           <span class="profile-label">生日</span>
@@ -328,7 +338,7 @@ export default {
 
       userId: null,
 
-      phoneKeyword: '',
+      searchKeyword: '',
 
       foundUser: null,
 
@@ -441,6 +451,16 @@ export default {
       const d = typeof date === 'string' ? new Date(date) : date
       if (Number.isNaN(d.getTime())) return ''
       return d.toLocaleDateString('zh-CN')
+    },
+
+    formatPrivateField (value, label) {
+      if (value) return value
+      return `${label}已隐藏`
+    },
+
+    formatFriendContact (user) {
+      if (user && user.phone) return user.phone
+      return '手机号已隐藏'
     },
 
     onProfileClosed () {
@@ -655,9 +675,9 @@ export default {
 
     async handleSearch () {
 
-      if (!this.phoneKeyword || !this.phoneKeyword.trim()) {
+      if (!this.searchKeyword || !this.searchKeyword.trim()) {
 
-        ElMessage.warning('请输入手机号')
+        ElMessage.warning('请输入 UID、邮箱或手机号')
 
         return
 
@@ -669,7 +689,7 @@ export default {
 
       try {
 
-        const res = await searchFriendUser(this.userId, this.phoneKeyword.trim())
+        const res = await searchFriendUser(this.userId, this.searchKeyword.trim())
 
         if (res && res.success) {
 
@@ -709,7 +729,7 @@ export default {
 
           this.foundUser = null
 
-          this.phoneKeyword = ''
+          this.searchKeyword = ''
 
           await this.refreshOutgoing()
 

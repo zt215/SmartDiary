@@ -1,10 +1,10 @@
 import service from './auth'
 
-export function searchFriendUser (userId, phone) {
+export function searchFriendUser (userId, keyword) {
   return service({
     url: '/friends/search-user',
     method: 'get',
-    params: { userId, phone }
+    params: { userId, keyword }
   })
 }
 

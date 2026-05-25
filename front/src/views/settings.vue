@@ -43,12 +43,20 @@
               </div>
             </div>
             <div class="info-item">
+              <label class="info-label">账号 UID</label>
+              <div class="info-value uid-value">{{ user.uid ?? '未分配' }}</div>
+            </div>
+            <div class="info-item">
               <label class="info-label">用户名</label>
               <div class="info-value">{{ user.name || '未设置' }}</div>
             </div>
             <div class="info-item">
               <label class="info-label">手机号</label>
               <div class="info-value">{{ user.phone || '未设置' }}</div>
+            </div>
+            <div class="info-item">
+              <label class="info-label">邮箱</label>
+              <div class="info-value">{{ user.email || '未设置' }}</div>
             </div>
             <div class="info-item">
               <label class="info-label">生日</label>
@@ -89,8 +97,15 @@
                   <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
                 </div>
               </el-form-item>
+              <el-form-item label="账号 UID">
+                <el-input :model-value="user.uid != null ? String(user.uid) : ''" disabled />
+                <div class="form-tip">UID 由系统自动分配，不可修改</div>
+              </el-form-item>
               <el-form-item label="用户名">
                 <el-input v-model="editForm.name" placeholder="请输入用户名" />
+              </el-form-item>
+              <el-form-item label="邮箱">
+                <el-input v-model="editForm.email" type="email" placeholder="选填" clearable />
               </el-form-item>
               <el-form-item label="手机号">
                 <el-input v-model="editForm.phone" placeholder="请输入手机号" disabled />
@@ -118,6 +133,45 @@
               </el-form-item>
             </el-form>
           </template>
+        </div>
+
+        <!-- 隐私设置 -->
+        <div class="info-card privacy-card">
+          <h3 class="card-title">隐私设置</h3>
+          <p class="privacy-desc">UID 始终可被他人搜索；手机号、邮箱可按需隐藏或限制搜索。</p>
+          <div class="privacy-item">
+            <div class="privacy-label-wrap">
+              <span class="privacy-label">允许通过手机号搜索到我</span>
+              <span class="privacy-hint">关闭后，他人无法用手机号查找到你</span>
+            </div>
+            <el-switch
+              v-model="privacyForm.allowPhoneSearch"
+              :loading="privacySaving"
+              @change="savePrivacySettings"
+            />
+          </div>
+          <div class="privacy-item">
+            <div class="privacy-label-wrap">
+              <span class="privacy-label">对好友隐藏手机号</span>
+              <span class="privacy-hint">开启后，好友资料中不显示你的手机号</span>
+            </div>
+            <el-switch
+              v-model="privacyForm.hidePhone"
+              :loading="privacySaving"
+              @change="savePrivacySettings"
+            />
+          </div>
+          <div class="privacy-item">
+            <div class="privacy-label-wrap">
+              <span class="privacy-label">对好友隐藏邮箱</span>
+              <span class="privacy-hint">开启后，好友资料中不显示你的邮箱</span>
+            </div>
+            <el-switch
+              v-model="privacyForm.hideEmail"
+              :loading="privacySaving"
+              @change="savePrivacySettings"
+            />
+          </div>
         </div>
 
         <!-- 操作按钮 -->
@@ -156,8 +210,10 @@ export default {
     const router = useRouter()
     const user = ref({
       id: null,
+      uid: null,
       name: '',
       phone: '',
+      email: '',
       birthday: null,
       address: '',
       avatar: ''
@@ -167,12 +223,27 @@ export default {
     const editForm = ref({
       name: '',
       phone: '',
+      email: '',
       birthday: '',
       address: '',
       avatar: ''
     })
 
     const addressCascaderValue = ref([])
+    const privacyForm = ref({
+      allowPhoneSearch: true,
+      hidePhone: false,
+      hideEmail: false
+    })
+    const privacySaving = ref(false)
+
+    const syncPrivacyForm = () => {
+      privacyForm.value = {
+        allowPhoneSearch: user.value.allowPhoneSearch !== false && user.value.allowPhoneSearch !== 0,
+        hidePhone: user.value.hidePhone === true || user.value.hidePhone === 1,
+        hideEmail: user.value.hideEmail === true || user.value.hideEmail === 1
+      }
+    }
 
     // 加载用户信息
     const loadUserInfo = () => {
@@ -180,6 +251,7 @@ export default {
       if (userInfo) {
         try {
           user.value = JSON.parse(userInfo)
+          syncPrivacyForm()
         } catch (e) {
           console.error('解析用户信息失败:', e)
           ElMessage.error('用户信息解析失败')
@@ -205,6 +277,7 @@ export default {
       editForm.value = {
         name: user.value.name || '',
         phone: user.value.phone || '',
+        email: user.value.email || '',
         birthday: user.value.birthday ? (typeof user.value.birthday === 'string' ? user.value.birthday : new Date(user.value.birthday).toISOString().split('T')[0]) : '',
         address: user.value.address || '',
         avatar: user.value.avatar || ''
@@ -219,6 +292,7 @@ export default {
       editForm.value = {
         name: '',
         phone: '',
+        email: '',
         birthday: '',
         address: ''
       }
@@ -317,6 +391,7 @@ export default {
           id: user.value.id,
           name: editForm.value.name.trim(),
           phone: editForm.value.phone,
+          email: editForm.value.email?.trim() || null,
           birthday: editForm.value.birthday || null,
           address: addressStored,
           avatar: editForm.value.avatar || null
@@ -324,10 +399,12 @@ export default {
 
         if (res && res.success) {
           ElMessage.success('信息更新成功')
-          // 更新本地用户信息
+          const updated = res.data ? { ...res.data } : {}
           user.value = {
             ...user.value,
+            ...updated,
             name: editForm.value.name.trim(),
+            email: editForm.value.email?.trim() || null,
             birthday: editForm.value.birthday || null,
             address: addressStored,
             avatar: editForm.value.avatar || null
@@ -416,6 +493,44 @@ export default {
       })
     }
 
+    // 保存隐私设置
+    const savePrivacySettings = async () => {
+      if (!user.value.id) return
+      privacySaving.value = true
+      try {
+        const res = await updateUser({
+          id: user.value.id,
+          name: user.value.name,
+          allowPhoneSearch: privacyForm.value.allowPhoneSearch,
+          hidePhone: privacyForm.value.hidePhone,
+          hideEmail: privacyForm.value.hideEmail
+        })
+        if (res && res.success) {
+          ElMessage.success('隐私设置已保存')
+          if (res.data) {
+            user.value = { ...user.value, ...res.data }
+          } else {
+            user.value = {
+              ...user.value,
+              allowPhoneSearch: privacyForm.value.allowPhoneSearch,
+              hidePhone: privacyForm.value.hidePhone,
+              hideEmail: privacyForm.value.hideEmail
+            }
+          }
+          localStorage.setItem('userInfo', JSON.stringify(user.value))
+        } else {
+          ElMessage.error(res?.message || '保存失败')
+          syncPrivacyForm()
+        }
+      } catch (e) {
+        console.error('保存隐私设置错误:', e)
+        ElMessage.error('保存失败')
+        syncPrivacyForm()
+      } finally {
+        privacySaving.value = false
+      }
+    }
+
     // 返回
     const goBack = () => {
       router.back()
@@ -432,11 +547,14 @@ export default {
       editForm,
       regionData,
       addressCascaderValue,
+      privacyForm,
+      privacySaving,
       formatRegionAddressLabel,
       formatDate,
       enterEditMode,
       cancelEdit,
       saveUserInfo,
+      savePrivacySettings,
       beforeAvatarUpload,
       handleAvatarUpload,
       handleLogout,
@@ -501,12 +619,52 @@ export default {
 }
 
 .info-card,
-.action-card {
+.action-card,
+.privacy-card {
   background-color: #fff;
   border-radius: 8px;
   padding: 2rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.privacy-desc {
+  margin: -0.5rem 0 1.25rem;
+  font-size: 0.9rem;
+  color: #888;
+  line-height: 1.5;
+}
+
+.privacy-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.privacy-item:last-child {
+  border-bottom: none;
+}
+
+.privacy-label-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.privacy-label {
+  display: block;
+  font-weight: 500;
+  color: #333;
+}
+
+.privacy-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #999;
+  line-height: 1.4;
 }
 
 .card-title {

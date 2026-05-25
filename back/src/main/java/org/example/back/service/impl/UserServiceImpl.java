@@ -6,7 +6,9 @@ import org.example.back.service.SmsService;
 import org.example.back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -21,12 +23,53 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private SmsService aliyunSmsService;
     
+    private static final long UID_START = 10_000_000L;
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+            java.util.regex.Pattern.compile("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
+
     // MD5加密方法
     private String md5(String str) {
         return DigestUtils.md5DigestAsHex(str.getBytes(StandardCharsets.UTF_8));
     }
+
+    private String normalizeEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            return null;
+        }
+        return email.trim();
+    }
+
+    private String validateEmailOptional(String email) {
+        if (email == null) {
+            return null;
+        }
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return "邮箱格式不正确";
+        }
+        return null;
+    }
+
+    private synchronized Long allocateNextUid() {
+        Long max = userMapper.selectMaxUid();
+        if (max == null || max < UID_START - 1) {
+            return UID_START;
+        }
+        return max + 1;
+    }
+
+    private String checkEmailAvailable(String email, Integer excludeUserId) {
+        if (email == null) {
+            return null;
+        }
+        User existing = userMapper.findByEmail(email);
+        if (existing != null && (excludeUserId == null || !existing.getId().equals(excludeUserId))) {
+            return "该邮箱已被使用";
+        }
+        return null;
+    }
     
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> register(User user) {
         Map<String, Object> result = new HashMap<>();
 
@@ -45,6 +88,31 @@ public class UserServiceImpl implements UserService {
                 result.put("success", false);
                 result.put("message", "手机号已被注册");
                 return result;
+            }
+
+            user.setEmail(normalizeEmail(user.getEmail()));
+            String emailError = validateEmailOptional(user.getEmail());
+            if (emailError != null) {
+                result.put("success", false);
+                result.put("message", emailError);
+                return result;
+            }
+            String emailUsed = checkEmailAvailable(user.getEmail(), null);
+            if (emailUsed != null) {
+                result.put("success", false);
+                result.put("message", emailUsed);
+                return result;
+            }
+
+            user.setUid(allocateNextUid());
+            if (user.getAllowPhoneSearch() == null) {
+                user.setAllowPhoneSearch(true);
+            }
+            if (user.getHidePhone() == null) {
+                user.setHidePhone(false);
+            }
+            if (user.getHideEmail() == null) {
+                user.setHideEmail(false);
             }
 
             // 密码加密处理
@@ -243,12 +311,37 @@ public class UserServiceImpl implements UserService {
                 return result;
             }
             
-            // 获取原有用户信息以保留密码
+            // 获取原有用户信息以保留密码、UID
             User oldUser = userMapper.findById(user.getId());
             if (oldUser == null) {
                 result.put("success", false);
                 result.put("message", "用户不存在");
                 return result;
+            }
+
+            user.setUid(oldUser.getUid());
+            user.setEmail(normalizeEmail(user.getEmail()));
+            String emailError = validateEmailOptional(user.getEmail());
+            if (emailError != null) {
+                result.put("success", false);
+                result.put("message", emailError);
+                return result;
+            }
+            String emailUsed = checkEmailAvailable(user.getEmail(), user.getId());
+            if (emailUsed != null) {
+                result.put("success", false);
+                result.put("message", emailUsed);
+                return result;
+            }
+            
+            if (user.getAllowPhoneSearch() == null) {
+                user.setAllowPhoneSearch(oldUser.getAllowPhoneSearch());
+            }
+            if (user.getHidePhone() == null) {
+                user.setHidePhone(oldUser.getHidePhone());
+            }
+            if (user.getHideEmail() == null) {
+                user.setHideEmail(oldUser.getHideEmail());
             }
             
             // 如果密码为空或未提供，保持原有密码
@@ -264,9 +357,14 @@ public class UserServiceImpl implements UserService {
             if (rowsAffected > 0) {
                 result.put("success", true);
                 result.put("message", "用户信息更新成功");
-                // 不返回密码
-                user.setPassword(null);
-                result.put("data", user);
+                User updated = userMapper.findById(user.getId());
+                if (updated != null) {
+                    updated.setPassword(null);
+                    result.put("data", updated);
+                } else {
+                    user.setPassword(null);
+                    result.put("data", user);
+                }
             } else {
                 result.put("success", false);
                 result.put("message", "用户信息更新失败");

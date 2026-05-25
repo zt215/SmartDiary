@@ -21,6 +21,8 @@ public interface FriendService {
 
     Map<String, Object> removeFriend(Integer userId, Integer friendUserId);
 
+    Map<String, Object> searchUser(Integer currentUserId, String keyword);
+
     Map<String, Object> searchByPhone(Integer currentUserId, String phone);
 
     Map<String, Object> getFriendProfile(Integer userId, Integer friendUserId);

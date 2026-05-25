@@ -2,6 +2,7 @@ package org.example.back.controller;
 
 import org.example.back.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -54,8 +55,10 @@ public class FriendController {
 
     @GetMapping("/search-user")
     public Map<String, Object> searchUser(@RequestParam("userId") Integer userId,
-                                          @RequestParam("phone") String phone) {
-        return friendService.searchByPhone(userId, phone);
+                                          @RequestParam(value = "keyword", required = false) String keyword,
+                                          @RequestParam(value = "phone", required = false) String phone) {
+        String q = StringUtils.hasText(keyword) ? keyword : phone;
+        return friendService.searchUser(userId, q);
     }
 
     @GetMapping("/profile")

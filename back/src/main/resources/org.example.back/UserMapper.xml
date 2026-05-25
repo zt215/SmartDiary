@@ -7,9 +7,14 @@
     <!-- 结果映射 -->
     <resultMap id="UserResultMap" type="org.example.back.pojo.User">
         <id property="id" column="id"/>
+        <result property="uid" column="uid"/>
         <result property="name" column="name"/>
         <result property="password" column="password"/>
         <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="allowPhoneSearch" column="allow_phone_search"/>
+        <result property="hidePhone" column="hide_phone"/>
+        <result property="hideEmail" column="hide_email"/>
         <result property="birthday" column="birthday"/>
         <result property="address" column="address"/>
         <result property="avatar" column="avatar"/>
@@ -18,8 +23,8 @@
 
     <!-- 插入用户 -->
     <insert id="insert" parameterType="org.example.back.pojo.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user(name, password, phone, birthday, address, avatar, theme)
-        VALUES(#{name}, #{password}, #{phone}, #{birthday}, #{address}, #{avatar}, #{theme})
+        INSERT INTO user(uid, name, password, phone, email, birthday, address, avatar, theme)
+        VALUES(#{uid}, #{name}, #{password}, #{phone}, #{email}, #{birthday}, #{address}, #{avatar}, #{theme})
     </insert>
 
     <!-- 根据用户名查询用户 -->
@@ -44,6 +49,10 @@
             <if test="name != null">name = #{name},</if>
             <if test="password != null">password = #{password},</if>
             <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="allowPhoneSearch != null">allow_phone_search = #{allowPhoneSearch},</if>
+            <if test="hidePhone != null">hide_phone = #{hidePhone},</if>
+            <if test="hideEmail != null">hide_email = #{hideEmail},</if>
             <if test="birthday != null">birthday = #{birthday},</if>
             <if test="address != null">address = #{address},</if>
             <if test="avatar != null">avatar = #{avatar},</if>
@@ -60,6 +69,18 @@
     <!-- 查询所有用户 -->
     <select id="findAll" resultMap="UserResultMap">
         SELECT * FROM user
+    </select>
+
+    <select id="selectMaxUid" resultType="long">
+        SELECT COALESCE(MAX(uid), 9999999) FROM user
+    </select>
+
+    <select id="findByEmail" parameterType="string" resultMap="UserResultMap">
+        SELECT * FROM user WHERE email = #{email} LIMIT 1
+    </select>
+
+    <select id="findByUid" parameterType="long" resultMap="UserResultMap">
+        SELECT * FROM user WHERE uid = #{uid} LIMIT 1
     </select>
 
 </mapper>

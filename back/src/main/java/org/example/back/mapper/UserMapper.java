@@ -40,4 +40,10 @@ public interface UserMapper {
      * 查询所有用户
      */
     List<User> findAll();
+
+    Long selectMaxUid();
+
+    User findByEmail(String email);
+
+    User findByUid(Long uid);
 }

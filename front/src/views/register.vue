@@ -73,6 +73,15 @@
                                     required
                                 />
                             </el-form-item>
+
+                            <el-form-item label="邮箱">
+                                <el-input
+                                    type="email"
+                                    v-model="form.email"
+                                    placeholder="选填，用于找回账号等"
+                                    clearable
+                                />
+                            </el-form-item>
                             
                             <el-form-item label="生日">
                                 <el-date-picker
@@ -171,6 +180,7 @@ const form = reactive({
     phone: '',
     verificationCode: '',
     nickname: '',
+    email: '',
     birthday: '',
     password: '',
     confirmPassword: ''
@@ -327,6 +337,7 @@ const handleRegister = async () => {
             name: form.nickname,
             password: form.password,
             phone: form.phone,
+            email: form.email?.trim() || null,
             birthday: form.birthday,
             address: addressStored,
             avatar: defaultAvatar

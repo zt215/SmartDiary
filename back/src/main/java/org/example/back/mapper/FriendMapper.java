@@ -44,7 +44,7 @@ public interface FriendMapper {
             SELECT fr.id AS requestId,
                    u.id AS id,
                    u.name AS name,
-                   u.phone AS phone,
+                   CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
                    u.avatar AS avatar
             FROM friend_request fr
             JOIN user u ON u.id = fr.from_user_id
@@ -57,7 +57,7 @@ public interface FriendMapper {
             SELECT fr.id AS requestId,
                    u.id AS id,
                    u.name AS name,
-                   u.phone AS phone,
+                   CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
                    u.avatar AS avatar
             FROM friend_request fr
             JOIN user u ON u.id = fr.to_user_id
@@ -70,7 +70,7 @@ public interface FriendMapper {
             SELECT fr.id AS requestId,
                    CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END AS id,
                    u.name AS name,
-                   u.phone AS phone,
+                   CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
                    u.avatar AS avatar,
                    (SELECT MAX(dc.create_time)
                     FROM diary_circle dc

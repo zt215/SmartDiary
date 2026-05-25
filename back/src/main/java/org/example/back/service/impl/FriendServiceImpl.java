@@ -9,6 +9,7 @@ import org.example.back.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.example.back.util.UserPrivacyUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -201,23 +202,24 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public Map<String, Object> searchByPhone(Integer currentUserId, String phone) {
+    public Map<String, Object> searchUser(Integer currentUserId, String keyword) {
         Map<String, Object> result = new HashMap<>();
         if (currentUserId == null) {
             result.put("success", false);
             result.put("message", "缺少用户");
             return result;
         }
-        if (!StringUtils.hasText(phone)) {
+        if (!StringUtils.hasText(keyword)) {
             result.put("success", false);
-            result.put("message", "请输入手机号");
+            result.put("message", "请输入 UID、邮箱或手机号");
             return result;
         }
-        String trimmed = phone.trim();
-        User u = userMapper.findByPhone(trimmed);
+
+        String trimmed = keyword.trim();
+        User u = resolveUserByKeyword(trimmed);
         if (u == null) {
             result.put("success", false);
-            result.put("message", "未找到该手机号对应的用户");
+            result.put("message", "未找到匹配的用户");
             return result;
         }
         if (currentUserId.equals(u.getId())) {
@@ -225,10 +227,42 @@ public class FriendServiceImpl implements FriendService {
             result.put("message", "不能添加自己");
             return result;
         }
-        u.setPassword(null);
+
+        if (isPhoneKeyword(trimmed) && !UserPrivacyUtil.allowPhoneSearch(u)) {
+            result.put("success", false);
+            result.put("message", "该用户未开放手机号搜索");
+            return result;
+        }
+
         result.put("success", true);
-        result.put("data", u);
+        result.put("data", UserPrivacyUtil.maskForViewer(u));
         return result;
+    }
+
+    @Override
+    public Map<String, Object> searchByPhone(Integer currentUserId, String phone) {
+        return searchUser(currentUserId, phone);
+    }
+
+    private User resolveUserByKeyword(String keyword) {
+        if (keyword.contains("@")) {
+            return userMapper.findByEmail(keyword);
+        }
+        if (isPhoneKeyword(keyword)) {
+            return userMapper.findByPhone(keyword);
+        }
+        if (keyword.matches("^\\d+$")) {
+            try {
+                return userMapper.findByUid(Long.parseLong(keyword));
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private boolean isPhoneKeyword(String keyword) {
+        return keyword.matches("^1[3-9]\\d{9}$");
     }
 
     @Override
@@ -255,9 +289,8 @@ public class FriendServiceImpl implements FriendService {
             result.put("message", "用户不存在");
             return result;
         }
-        u.setPassword(null);
         result.put("success", true);
-        result.put("data", u);
+        result.put("data", UserPrivacyUtil.maskForViewer(u));
         return result;
     }
 
