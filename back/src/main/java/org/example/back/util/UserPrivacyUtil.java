@@ -17,6 +17,13 @@ public final class UserPrivacyUtil {
         return user.getAllowPhoneSearch() == null || Boolean.TRUE.equals(user.getAllowPhoneSearch());
     }
 
+    public static boolean allowEmailSearch(User user) {
+        if (user == null) {
+            return false;
+        }
+        return user.getAllowEmailSearch() == null || Boolean.TRUE.equals(user.getAllowEmailSearch());
+    }
+
     public static User maskForViewer(User user) {
         if (user == null) {
             return null;

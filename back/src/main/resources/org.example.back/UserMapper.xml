@@ -13,6 +13,7 @@
         <result property="phone" column="phone"/>
         <result property="email" column="email"/>
         <result property="allowPhoneSearch" column="allow_phone_search"/>
+        <result property="allowEmailSearch" column="allow_email_search"/>
         <result property="hidePhone" column="hide_phone"/>
         <result property="hideEmail" column="hide_email"/>
         <result property="birthday" column="birthday"/>
@@ -51,6 +52,7 @@
             <if test="phone != null">phone = #{phone},</if>
             <if test="email != null">email = #{email},</if>
             <if test="allowPhoneSearch != null">allow_phone_search = #{allowPhoneSearch},</if>
+            <if test="allowEmailSearch != null">allow_email_search = #{allowEmailSearch},</if>
             <if test="hidePhone != null">hide_phone = #{hidePhone},</if>
             <if test="hideEmail != null">hide_email = #{hideEmail},</if>
             <if test="birthday != null">birthday = #{birthday},</if>

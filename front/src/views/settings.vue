@@ -152,6 +152,17 @@
           </div>
           <div class="privacy-item">
             <div class="privacy-label-wrap">
+              <span class="privacy-label">允许通过邮箱搜索到我</span>
+              <span class="privacy-hint">关闭后，他人无法用邮箱查找到你</span>
+            </div>
+            <el-switch
+              v-model="privacyForm.allowEmailSearch"
+              :loading="privacySaving"
+              @change="savePrivacySettings"
+            />
+          </div>
+          <div class="privacy-item">
+            <div class="privacy-label-wrap">
               <span class="privacy-label">对好友隐藏手机号</span>
               <span class="privacy-hint">开启后，好友资料中不显示你的手机号</span>
             </div>
@@ -232,6 +243,7 @@ export default {
     const addressCascaderValue = ref([])
     const privacyForm = ref({
       allowPhoneSearch: true,
+      allowEmailSearch: true,
       hidePhone: false,
       hideEmail: false
     })
@@ -240,6 +252,7 @@ export default {
     const syncPrivacyForm = () => {
       privacyForm.value = {
         allowPhoneSearch: user.value.allowPhoneSearch !== false && user.value.allowPhoneSearch !== 0,
+        allowEmailSearch: user.value.allowEmailSearch !== false && user.value.allowEmailSearch !== 0,
         hidePhone: user.value.hidePhone === true || user.value.hidePhone === 1,
         hideEmail: user.value.hideEmail === true || user.value.hideEmail === 1
       }
@@ -502,6 +515,7 @@ export default {
           id: user.value.id,
           name: user.value.name,
           allowPhoneSearch: privacyForm.value.allowPhoneSearch,
+          allowEmailSearch: privacyForm.value.allowEmailSearch,
           hidePhone: privacyForm.value.hidePhone,
           hideEmail: privacyForm.value.hideEmail
         })
@@ -513,6 +527,7 @@ export default {
             user.value = {
               ...user.value,
               allowPhoneSearch: privacyForm.value.allowPhoneSearch,
+              allowEmailSearch: privacyForm.value.allowEmailSearch,
               hidePhone: privacyForm.value.hidePhone,
               hideEmail: privacyForm.value.hideEmail
             }

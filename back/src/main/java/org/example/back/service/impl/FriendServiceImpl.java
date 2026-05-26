@@ -233,6 +233,11 @@ public class FriendServiceImpl implements FriendService {
             result.put("message", "该用户未开放手机号搜索");
             return result;
         }
+        if (trimmed.contains("@") && !UserPrivacyUtil.allowEmailSearch(u)) {
+            result.put("success", false);
+            result.put("message", "该用户未开放邮箱搜索");
+            return result;
+        }
 
         result.put("success", true);
         result.put("data", UserPrivacyUtil.maskForViewer(u));

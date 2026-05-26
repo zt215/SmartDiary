@@ -189,6 +189,7 @@ CREATE TABLE `user`  (
   `phone` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '手机号',
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '邮箱',
   `allow_phone_search` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许通过手机号被搜索',
+  `allow_email_search` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许通过邮箱被搜索',
   `hide_phone` tinyint(1) NOT NULL DEFAULT 0 COMMENT '对好友隐藏手机号',
   `hide_email` tinyint(1) NOT NULL DEFAULT 0 COMMENT '对好友隐藏邮箱',
   `birthday` date NULL DEFAULT NULL COMMENT '生日',
@@ -202,9 +203,9 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- 演示用户（密码均为 123456 的 MD5）
-INSERT INTO `user` (`id`, `uid`, `name`, `password`, `phone`, `email`, `allow_phone_search`, `hide_phone`, `hide_email`, `birthday`, `address`, `avatar`, `theme`) VALUES
-(2, 10000000, 'hh', 'e10adc3949ba59abbe56e057f20f883e', '15548157447', NULL, 1, 0, 0, '2025-10-27', 'beijing', NULL, 'default'),
-(3, 10000001, '123', 'e10adc3949ba59abbe56e057f20f883e', '15548157446', NULL, 1, 0, 0, '2005-01-18', '15,1509,150924', NULL, 'light'),
-(4, 10000002, '夜梦水尚清', 'e10adc3949ba59abbe56e057f20f883e', '19935212852', NULL, 1, 0, 0, '2005-03-29', '14,1402,140213', NULL, 'default'),
-(5, 10000003, 'sm', 'e10adc3949ba59abbe56e057f20f883e', '15598195164', NULL, 1, 0, 0, '2026-05-21', '14,1402,140213', NULL, 'light');
+INSERT INTO `user` (`id`, `uid`, `name`, `password`, `phone`, `email`, `allow_phone_search`, `allow_email_search`, `hide_phone`, `hide_email`, `birthday`, `address`, `avatar`, `theme`) VALUES
+(2, 10000000, 'hh', 'e10adc3949ba59abbe56e057f20f883e', '15548157447', NULL, 1, 1, 0, 0, '2025-10-27', 'beijing', NULL, 'default'),
+(3, 10000001, '123', 'e10adc3949ba59abbe56e057f20f883e', '15548157446', NULL, 1, 1, 0, 0, '2005-01-18', '15,1509,150924', NULL, 'light'),
+(4, 10000002, '夜梦水尚清', 'e10adc3949ba59abbe56e057f20f883e', '19935212852', NULL, 1, 1, 0, 0, '2005-03-29', '14,1402,140213', NULL, 'default'),
+(5, 10000003, 'sm', 'e10adc3949ba59abbe56e057f20f883e', '15598195164', NULL, 1, 1, 0, 0, '2026-05-21', '14,1402,140213', NULL, 'light');
 SET FOREIGN_KEY_CHECKS = 1;

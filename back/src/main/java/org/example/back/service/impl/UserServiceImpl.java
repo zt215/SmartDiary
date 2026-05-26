@@ -337,6 +337,9 @@ public class UserServiceImpl implements UserService {
             if (user.getAllowPhoneSearch() == null) {
                 user.setAllowPhoneSearch(oldUser.getAllowPhoneSearch());
             }
+            if (user.getAllowEmailSearch() == null) {
+                user.setAllowEmailSearch(oldUser.getAllowEmailSearch());
+            }
             if (user.getHidePhone() == null) {
                 user.setHidePhone(oldUser.getHidePhone());
             }
