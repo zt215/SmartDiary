@@ -1,0 +1,60 @@
+/* 与 login.vue 一致的透明表单输入（注册 / 忘记密码） */
+.auth-transparent-form .el-input {
+  background: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.auth-transparent-form .el-input__wrapper,
+.auth-transparent-form .el-date-editor .el-input__wrapper {
+  background: transparent !important;
+  border-radius: 10px;
+  border: 1px solid rgba(250, 188, 172, 0.85);
+  box-shadow: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.auth-transparent-form .el-input__wrapper.is-focus,
+.auth-transparent-form .el-date-editor .el-input__wrapper.is-focus {
+  border-color: #d8a8ff;
+  box-shadow: 0 0 0 1px rgba(211, 44, 230, 0.35);
+}
+
+.auth-transparent-form .el-input__inner {
+  background: transparent;
+  color: #f8f0e8;
+}
+
+.auth-transparent-form .el-input__inner::placeholder {
+  color: rgba(220, 220, 220, 0.92);
+}
+
+.auth-transparent-form .el-form-item__label {
+  color: #fabcac;
+  text-shadow: 0 1px 4px rgba(58, 8, 133, 0.45);
+}
+
+.auth-transparent-form .el-input__prefix,
+.auth-transparent-form .el-input__suffix,
+.auth-transparent-form .el-input__clear,
+.auth-transparent-form .el-select__caret,
+.auth-transparent-form .el-cascader .el-input .icon-arrow-down {
+  color: rgba(250, 188, 172, 0.9);
+}
+
+.auth-transparent-form .el-date-editor {
+  --el-input-bg-color: transparent;
+  --el-input-border-color: rgba(250, 188, 172, 0.85);
+  --el-input-text-color: #f8f0e8;
+  --el-input-placeholder-color: rgba(220, 220, 220, 0.92);
+  width: 100%;
+}
+
+.auth-transparent-form .el-cascader {
+  width: 100%;
+}
+
+.auth-transparent-form .step-form h2 {
+  color: #f8f0e8;
+  text-shadow: 0 1px 4px rgba(58, 8, 133, 0.45);
+}

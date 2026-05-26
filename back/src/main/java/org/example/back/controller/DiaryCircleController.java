@@ -170,38 +170,4 @@ public class DiaryCircleController {
         }
         return result;
     }
-
-    /**
-     * 增加评论数
-     */
-    @PostMapping("/comment/increment/{id}")
-    public Map<String, Object> incrementCommentCount(@PathVariable("id") Integer id) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            diaryCircleService.incrementCommentCount(id);
-            result.put("success", true);
-            result.put("message", "评论数已增加");
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "操作异常：" + e.getMessage());
-        }
-        return result;
-    }
-
-    /**
-     * 减少评论数
-     */
-    @PostMapping("/comment/decrement/{id}")
-    public Map<String, Object> decrementCommentCount(@PathVariable("id") Integer id) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            diaryCircleService.decrementCommentCount(id);
-            result.put("success", true);
-            result.put("message", "评论数已减少");
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", "操作异常：" + e.getMessage());
-        }
-        return result;
-    }
 }

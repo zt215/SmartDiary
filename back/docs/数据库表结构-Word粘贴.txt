@@ -1,0 +1,69 @@
+【说明】全选本文件内容复制到 Word；若未自动分列，使用：插入 → 表格 → 文本转换成表格 → 分隔符选「制表符」。
+列「是否不是 null」：是 = NOT NULL，否 = 允许为空。
+
+表 4.1 user 用户信息表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	用户 ID，自增
+uid	bigint	8	是	唯一	账号 UID，从 10000000 起
+name	varchar	255	是	否	昵称（登录名）
+password	varchar	255	是	否	密码 MD5 摘要
+phone	varchar	100	是	否	手机号
+email	varchar	255	否	否	邮箱，可选
+allow_phone_search	tinyint	1	是	否	是否允许手机号被搜索，默认 1
+allow_email_search	tinyint	1	是	否	是否允许邮箱被搜索，默认 1
+hide_phone	tinyint	1	是	否	对好友隐藏手机号，默认 0
+hide_email	tinyint	1	是	否	对好友隐藏邮箱，默认 0
+birthday	date	—	否	否	生日
+address	varchar	255	否	否	地址（可为省市区编码）
+avatar	longtext	—	否	否	头像（常为 Base64）
+theme	varchar	50	否	否	界面主题，默认 default
+
+表 4.2 diary 日记表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	日记 ID，自增
+user_id	int	—	是	否	所属用户 ID
+title	varchar	255	是	否	标题
+content	text	—	否	否	正文（富文本 HTML）
+create_time	datetime	—	是	否	创建时间
+update_time	datetime	—	是	否	更新时间
+
+表 4.3 diary_circle 字迹圈动态表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	动态 ID，自增
+user_id	int	—	是	否	发布用户 ID
+content	text	—	是	否	动态正文
+create_time	datetime	—	否	否	创建时间
+update_time	datetime	—	否	否	更新时间
+
+表 4.4 diary_circle_like 动态点赞记录表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	记录 ID，自增
+diary_circle_id	int	—	是	否	动态 ID
+user_id	int	—	是	否	点赞用户 ID
+create_time	datetime	—	否	否	点赞时间
+
+表 4.5 comment 评论表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	评论 ID，自增
+circle_id	int	—	是	否	所属动态 ID
+user_id	int	—	是	否	评论用户 ID
+content	text	—	是	否	评论内容
+parent_id	int	—	否	否	父评论 ID，NULL 为顶级
+create_time	datetime	—	否	否	创建时间
+update_time	datetime	—	否	否	更新时间
+
+表 4.6 comment_like 评论点赞记录表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	记录 ID，自增
+comment_id	int	—	是	否	评论 ID
+user_id	int	—	是	否	点赞用户 ID
+create_time	datetime	—	否	否	点赞时间
+
+表 4.7 friend_request 好友申请表
+名称	类型	长度	是否不是 null	是否为键	注释
+id	int	—	是	主键	主键，自增
+from_user_id	int	—	是	否	申请人用户 ID
+to_user_id	int	—	是	否	被申请人用户 ID
+status	tinyint	—	是	否	0 待处理 1 已同意 2 已拒绝
+create_time	datetime	—	否	否	创建时间
+update_time	datetime	—	否	否	更新时间

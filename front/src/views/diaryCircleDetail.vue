@@ -41,7 +41,7 @@
             <i class="icon-like"></i> {{ diary.likeCount || 0 }} 点赞
           </span>
           <span class="stat-item">
-            <i class="icon-comment"></i> {{ commentList.length }} 评论
+            <i class="icon-comment"></i> {{ totalCommentCount }} 评论
           </span>
         </div>
 
@@ -49,7 +49,7 @@
         <div class="comment-section">
           <div class="comment-header">
             <h3>评论</h3>
-            <span class="comment-count">({{ commentList.length }})</span>
+            <span class="comment-count">({{ totalCommentCount }})</span>
           </div>
           
           <!-- 评论列表 -->
@@ -66,17 +66,21 @@
                   <span class="comment-time">{{ formatCommentTime(comment.createTime) }}</span>
                 </div>
               </div>
-              <div class="comment-content">
+              <div
+                class="comment-content"
+                :class="{ 'is-replyable': canReplyTo(comment) }"
+                @click="onCommentBodyClick(comment)"
+              >
                 {{ comment.content }}
               </div>
               <div class="comment-footer">
-                <button class="comment-action-btn" @click="likeComment(comment)">
+                <button class="comment-action-btn" @click.stop="likeComment(comment)">
                   <i class="icon-like"></i> {{ comment.likeCount || 0 }}
                 </button>
                 <button
                   v-if="canDeleteComment(comment)"
                   class="comment-action-btn delete-btn"
-                  @click="deleteComment(comment)"
+                  @click.stop="deleteComment(comment)"
                 >
                   删除
                 </button>
@@ -85,7 +89,7 @@
               <!-- 回复列表 -->
               <div v-if="comment.replies && comment.replies.length > 0" class="reply-list">
                 <div 
-                  v-for="reply in comment.replies" 
+                  v-for="reply in getVisibleReplies(comment)" 
                   :key="reply.id" 
                   class="reply-item"
                 >
@@ -96,10 +100,38 @@
                       <span class="reply-time">{{ formatCommentTime(reply.createTime) }}</span>
                     </div>
                   </div>
-                  <div class="reply-content">
+                  <div
+                    class="reply-content"
+                    :class="{ 'is-replyable': canReplyTo(reply) }"
+                    @click="onReplyBodyClick(comment, reply)"
+                  >
                     {{ reply.content }}
                   </div>
+                  <div v-if="canDeleteComment(reply)" class="reply-footer">
+                    <button
+                      class="comment-action-btn delete-btn"
+                      @click.stop="deleteComment(reply)"
+                    >
+                      删除
+                    </button>
+                  </div>
                 </div>
+                <button
+                  v-if="hiddenReplyCount(comment) > 0"
+                  type="button"
+                  class="reply-toggle-btn"
+                  @click="expandReplies(comment)"
+                >
+                  展开 {{ hiddenReplyCount(comment) }} 条回复
+                </button>
+                <button
+                  v-else-if="isRepliesExpanded(comment) && (comment.replies?.length || 0) > REPLY_VISIBLE_LIMIT"
+                  type="button"
+                  class="reply-toggle-btn"
+                  @click="collapseReplies(comment)"
+                >
+                  收起回复
+                </button>
               </div>
             </div>
             
@@ -111,14 +143,21 @@
           
           <!-- 发布评论框 -->
           <div class="publish-comment-box">
-            <textarea 
-              v-model="newComment" 
-              placeholder="写下你的评论..." 
-              class="comment-input"
-              rows="3"
-            ></textarea>
+            <div class="publish-comment-main">
+              <div v-if="isReplyMode" class="reply-mode-bar">
+                <span>正在回复 @{{ replyTarget.userName }}</span>
+                <button type="button" class="cancel-reply-btn" @click="cancelReply">取消</button>
+              </div>
+              <textarea 
+                ref="commentInputRef"
+                v-model="newComment" 
+                :placeholder="commentInputPlaceholder" 
+                class="comment-input"
+                rows="3"
+              ></textarea>
+            </div>
             <button class="submit-comment-btn" @click="submitComment" :disabled="!newComment.trim()">
-              发表评论
+              {{ submitButtonText }}
             </button>
           </div>
         </div>
@@ -128,11 +167,12 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDiaryCircleById, toggleLike, deleteDiaryCircle } from '../api/diaryCircle'
 import { getComments, addComment, toggleCommentLike, deleteComment as deleteCommentApi } from '../api/comment'
+import { useCommentReplies, REPLY_VISIBLE_LIMIT } from '../composables/useCommentReplies'
 
 export default {
   name: 'DiaryCircleDetailView',
@@ -151,8 +191,44 @@ export default {
     })
     const commentList = ref([])
     const newComment = ref('')
+    const commentInputRef = ref(null)
     const currentUserId = ref(null)
     const isDiaryOwner = ref(false)
+
+    const {
+      replyTarget,
+      canReplyTo,
+      cancelReply,
+      commentInputPlaceholder,
+      isReplyMode,
+      submitButtonText,
+      getVisibleReplies,
+      hiddenReplyCount,
+      isRepliesExpanded,
+      expandReplies,
+      collapseReplies,
+      handleReplyClick,
+      appendSubmittedComment,
+      removeCommentFromList
+    } = useCommentReplies(() => currentUserId.value)
+
+    const totalCommentCount = computed(() =>
+      commentList.value.reduce((sum, c) => sum + 1 + (c.replies?.length || 0), 0)
+    )
+
+    const focusCommentInput = () => {
+      nextTick(() => commentInputRef.value?.focus())
+    }
+
+    const onCommentBodyClick = (comment) => {
+      handleReplyClick(comment)
+      focusCommentInput()
+    }
+
+    const onReplyBodyClick = (rootComment, reply) => {
+      handleReplyClick(rootComment, reply)
+      focusCommentInput()
+    }
 
     // 获取用户信息
     const getUserInfo = () => {
@@ -217,30 +293,22 @@ export default {
         return
       }
 
+      const parentId = replyTarget.value?.parentId ?? null
+      const rootComment = replyTarget.value?.rootComment ?? null
+
       try {
         const res = await addComment({
           circleId: diary.value.id,
           userId: user.id,
           content: newComment.value,
-          parentId: null
+          parentId
         })
         
         if (res && res.success) {
-          const newCommentData = {
-            ...res.data,
-            userName: user.name,
-            userAvatar: user.avatar,
-            createTime: '刚刚',
-            likeCount: 0,
-            replies: []
-          }
-          commentList.value.push(newCommentData)
+          appendSubmittedComment(commentList.value, res.data, user, parentId, rootComment)
           newComment.value = ''
-          
-          // 更新评论数
           diary.value.commentCount = (diary.value.commentCount || 0) + 1
-          
-          ElMessage.success('评论成功')
+          ElMessage.success(parentId ? '回复成功' : '评论成功')
         } else {
           ElMessage.error(res?.message || '评论失败')
         }
@@ -315,7 +383,8 @@ export default {
       }).then(async () => {
         const res = await deleteCommentApi(comment.id, currentUserId.value, diary.value.id)
         if (res && res.success) {
-          commentList.value = commentList.value.filter(c => c.id !== comment.id)
+          removeCommentFromList(commentList.value, comment)
+          diary.value.commentCount = Math.max(0, (diary.value.commentCount || 0) - 1)
           ElMessage.success('评论删除成功')
         } else {
           ElMessage.error(res?.message || '删除失败')
@@ -396,6 +465,22 @@ export default {
       diary,
       commentList,
       newComment,
+      commentInputRef,
+      replyTarget,
+      totalCommentCount,
+      canReplyTo,
+      cancelReply,
+      commentInputPlaceholder,
+      isReplyMode,
+      submitButtonText,
+      getVisibleReplies,
+      hiddenReplyCount,
+      isRepliesExpanded,
+      expandReplies,
+      collapseReplies,
+      onCommentBodyClick,
+      onReplyBodyClick,
+      REPLY_VISIBLE_LIMIT,
       submitComment,
       likeComment,
       toggleDiaryLike,
@@ -664,6 +749,71 @@ export default {
   line-height: 1.6;
   font-size: 14px;
   margin-bottom: 0.5rem;
+}
+
+.comment-content.is-replyable,
+.reply-content.is-replyable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.25rem 0.35rem;
+  margin-left: -0.35rem;
+  transition: background-color 0.15s;
+}
+
+.comment-content.is-replyable:hover,
+.reply-content.is-replyable:hover {
+  background-color: var(--hover-bg);
+}
+
+.reply-footer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reply-toggle-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0;
+  border: none;
+  background: none;
+  color: var(--calendar-today-bg);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reply-toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.publish-comment-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reply-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.cancel-reply-btn {
+  border: none;
+  background: none;
+  color: var(--calendar-today-bg);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+.cancel-reply-btn:hover {
+  text-decoration: underline;
 }
 
 .comment-footer {

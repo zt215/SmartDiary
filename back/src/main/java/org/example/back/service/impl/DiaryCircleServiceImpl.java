@@ -1,5 +1,7 @@
 package org.example.back.service.impl;
 
+import org.example.back.mapper.CommentLikeMapper;
+import org.example.back.mapper.CommentMapper;
 import org.example.back.mapper.DiaryCircleLikeMapper;
 import org.example.back.mapper.DiaryCircleMapper;
 import org.example.back.pojo.DiaryCircle;
@@ -16,19 +18,38 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
 
     @Autowired
     private DiaryCircleMapper diaryCircleMapper;
-    
+
     @Autowired
     private DiaryCircleLikeMapper diaryCircleLikeMapper;
+
+    @Autowired
+    private CommentMapper commentMapper;
+
+    @Autowired
+    private CommentLikeMapper commentLikeMapper;
 
     @Override
     @Transactional
     public int publish(DiaryCircle diaryCircle) {
-        return diaryCircleMapper.insert(diaryCircle);
+        int rows = diaryCircleMapper.insert(diaryCircle);
+        if (rows > 0 && diaryCircle.getId() != null) {
+            DiaryCircle saved = diaryCircleMapper.selectById(diaryCircle.getId());
+            if (saved != null) {
+                diaryCircle.setLikeCount(saved.getLikeCount());
+                diaryCircle.setCommentCount(saved.getCommentCount());
+                diaryCircle.setCreateTime(saved.getCreateTime());
+                diaryCircle.setUpdateTime(saved.getUpdateTime());
+            }
+        }
+        return rows;
     }
 
     @Override
     @Transactional
     public int delete(Integer id) {
+        commentLikeMapper.deleteByCircleId(id);
+        commentMapper.deleteByCircleId(id);
+        diaryCircleLikeMapper.deleteByDiaryCircleId(id);
         return diaryCircleMapper.deleteById(id);
     }
 
@@ -52,39 +73,24 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
     @Transactional
     public boolean toggleLike(Integer id, boolean isLike, Integer userId) {
         if (userId == null) {
-            return false; // 未登录用户不能点赞
+            return false;
         }
-        
+
         if (isLike) {
-            // 检查是否已经点赞过
             DiaryCircleLike existing = diaryCircleLikeMapper.selectByDiaryCircleIdAndUserId(id, userId);
             if (existing != null) {
-                return true; // 已经点赞过，直接返回
+                return true;
             }
-            
-            // 插入点赞记录
+
             DiaryCircleLike diaryCircleLike = new DiaryCircleLike();
             diaryCircleLike.setDiaryCircleId(id);
             diaryCircleLike.setUserId(userId);
-            int rows = diaryCircleLikeMapper.insert(diaryCircleLike);
-            
-            if (rows > 0) {
-                // 增加动态点赞数
-                return diaryCircleMapper.incrementLikeCount(id) > 0;
-            }
-            return false;
-        } else {
-            // 取消点赞
-            int rows = diaryCircleLikeMapper.deleteByDiaryCircleIdAndUserId(id, userId);
-            
-            if (rows > 0) {
-                // 减少动态点赞数
-                return diaryCircleMapper.decrementLikeCount(id) > 0;
-            }
-            return false;
+            return diaryCircleLikeMapper.insert(diaryCircleLike) > 0;
         }
+
+        return diaryCircleLikeMapper.deleteByDiaryCircleIdAndUserId(id, userId) > 0;
     }
-    
+
     @Override
     public List<DiaryCircle> getAllWithLikeStatus(int page, int pageSize, Integer currentUserId, String filter) {
         int offset = (page - 1) * pageSize;
@@ -97,12 +103,11 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
         } else {
             list = diaryCircleMapper.selectAllWithUser(offset, pageSize);
         }
-        
-        // 设置当前用户的点赞状态
+
         if (currentUserId != null) {
             for (DiaryCircle diaryCircle : list) {
                 DiaryCircleLike likeRecord = diaryCircleLikeMapper.selectByDiaryCircleIdAndUserId(
-                    diaryCircle.getId(), 
+                    diaryCircle.getId(),
                     currentUserId
                 );
                 diaryCircle.setIsLiked(likeRecord != null);
@@ -112,19 +117,7 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
                 diaryCircle.setIsLiked(false);
             }
         }
-        
+
         return list;
-    }
-
-    @Override
-    @Transactional
-    public void incrementCommentCount(Integer id) {
-        diaryCircleMapper.incrementCommentCount(id);
-    }
-
-    @Override
-    @Transactional
-    public void decrementCommentCount(Integer id) {
-        diaryCircleMapper.decrementCommentCount(id);
     }
 }

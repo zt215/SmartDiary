@@ -30,9 +30,6 @@ public class CommentController {
         try {
             int rows = commentService.addComment(comment);
             if (rows > 0) {
-                // 增加动态的评论数
-                diaryCircleService.incrementCommentCount(comment.getCircleId());
-                
                 result.put("success", true);
                 result.put("message", "评论成功");
                 result.put("data", comment);

@@ -10,23 +10,29 @@
         <result property="commentCount" column="comment_count"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
-        <!-- 关联用户信息 -->
         <result property="userName" column="name"/>
         <result property="userAvatar" column="avatar"/>
     </resultMap>
 
-    <!-- 发布新动态 -->
+    <sql id="DiaryCircleSelectColumns">
+        dc.id,
+        dc.user_id,
+        dc.content,
+        dc.create_time,
+        dc.update_time,
+        (SELECT COUNT(*) FROM diary_circle_like dcl WHERE dcl.diary_circle_id = dc.id) AS like_count,
+        (SELECT COUNT(*) FROM comment c WHERE c.circle_id = dc.id) AS comment_count
+    </sql>
+
     <insert id="insert" parameterType="org.example.back.pojo.DiaryCircle" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO diary_circle (user_id, content, like_count, comment_count, create_time, update_time)
-        VALUES (#{userId}, #{content}, 0, 0, NOW(), NOW())
+        INSERT INTO diary_circle (user_id, content, create_time, update_time)
+        VALUES (#{userId}, #{content}, NOW(), NOW())
     </insert>
 
-    <!-- 删除动态 -->
     <delete id="deleteById">
         DELETE FROM diary_circle WHERE id = #{id}
     </delete>
 
-    <!-- 更新动态 -->
     <update id="update" parameterType="org.example.back.pojo.DiaryCircle">
         UPDATE diary_circle
         SET content = #{content},
@@ -34,26 +40,32 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 根据 ID 查询动态 -->
     <select id="selectById" resultMap="DiaryCircleResultMap">
-        SELECT dc.*, u.name, u.avatar
+        SELECT
+        <include refid="DiaryCircleSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM diary_circle dc
         LEFT JOIN user u ON dc.user_id = u.id
         WHERE dc.id = #{id}
     </select>
 
-    <!-- 分页查询所有动态（带用户信息） -->
     <select id="selectAllWithUser" resultMap="DiaryCircleResultMap">
-        SELECT dc.*, u.name, u.avatar
+        SELECT
+        <include refid="DiaryCircleSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM diary_circle dc
         LEFT JOIN user u ON dc.user_id = u.id
         ORDER BY dc.create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 
-    <!-- 分页查询好友的动态（带用户信息） -->
     <select id="selectFriendsWithUser" resultMap="DiaryCircleResultMap">
-        SELECT dc.*, u.name, u.avatar
+        SELECT
+        <include refid="DiaryCircleSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM diary_circle dc
         LEFT JOIN user u ON dc.user_id = u.id
         WHERE dc.user_id IN (
@@ -66,41 +78,15 @@
         LIMIT #{offset}, #{limit}
     </select>
 
-    <!-- 查询用户的动态 -->
     <select id="selectByUserId" resultMap="DiaryCircleResultMap">
-        SELECT dc.*, u.name, u.avatar
+        SELECT
+        <include refid="DiaryCircleSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM diary_circle dc
         LEFT JOIN user u ON dc.user_id = u.id
         WHERE dc.user_id = #{userId}
         ORDER BY dc.create_time DESC
     </select>
-
-    <!-- 增加点赞数 -->
-    <update id="incrementLikeCount">
-        UPDATE diary_circle
-        SET like_count = like_count + 1
-        WHERE id = #{id}
-    </update>
-
-    <!-- 减少点赞数 -->
-    <update id="decrementLikeCount">
-        UPDATE diary_circle
-        SET like_count = GREATEST(0, like_count - 1)
-        WHERE id = #{id}
-    </update>
-
-    <!-- 增加评论数 -->
-    <update id="incrementCommentCount">
-        UPDATE diary_circle
-        SET comment_count = comment_count + 1
-        WHERE id = #{id}
-    </update>
-
-    <!-- 减少评论数 -->
-    <update id="decrementCommentCount">
-        UPDATE diary_circle
-        SET comment_count = GREATEST(0, comment_count - 1)
-        WHERE id = #{id}
-    </update>
 
 </mapper>

@@ -27,7 +27,6 @@ CREATE TABLE `comment`  (
   `user_id` int NOT NULL COMMENT '用户 ID',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '评论内容',
   `parent_id` int NULL DEFAULT NULL COMMENT '父评论 ID（用于回复）',
-  `like_count` int NULL DEFAULT 0 COMMENT '点赞数',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -39,10 +38,10 @@ CREATE TABLE `comment`  (
 -- ----------------------------
 -- Records of comment
 -- ----------------------------
-INSERT INTO `comment` VALUES (1, 2, 3, '123', NULL, 1, '2026-03-19 15:54:57', '2026-03-19 15:55:52');
-INSERT INTO `comment` VALUES (2, 2, 3, '123', NULL, 0, '2026-03-19 16:36:29', '2026-03-19 16:36:29');
-INSERT INTO `comment` VALUES (4, 2, 3, 'da\'ddad', NULL, 0, '2026-03-19 17:08:48', '2026-03-19 17:08:48');
-INSERT INTO `comment` VALUES (5, 1, 3, '123', NULL, 1, '2026-03-20 09:41:21', '2026-03-20 09:42:51');
+INSERT INTO `comment` VALUES (1, 2, 3, '123', NULL, '2026-03-19 15:54:57', '2026-03-19 15:55:52');
+INSERT INTO `comment` VALUES (2, 2, 3, '123', NULL, '2026-03-19 16:36:29', '2026-03-19 16:36:29');
+INSERT INTO `comment` VALUES (4, 2, 3, 'da\'ddad', NULL, '2026-03-19 17:08:48', '2026-03-19 17:08:48');
+INSERT INTO `comment` VALUES (5, 1, 3, '123', NULL, '2026-03-20 09:41:21', '2026-03-20 09:42:51');
 
 -- ----------------------------
 -- Table structure for comment_like
@@ -112,8 +111,6 @@ CREATE TABLE `diary_circle`  (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '动态 ID',
   `user_id` int NOT NULL COMMENT '用户 ID',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '动态内容',
-  `like_count` int NULL DEFAULT 0 COMMENT '点赞数',
-  `comment_count` int NULL DEFAULT 0 COMMENT '评论数',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
@@ -124,11 +121,11 @@ CREATE TABLE `diary_circle`  (
 -- ----------------------------
 -- Records of diary_circle
 -- ----------------------------
-INSERT INTO `diary_circle` VALUES (1, 3, '123', 5, 1, '2026-03-19 15:25:52', '2026-03-20 09:42:49');
-INSERT INTO `diary_circle` VALUES (3, 3, '123356', 7, 0, '2026-03-19 16:18:40', '2026-03-20 09:49:04');
-INSERT INTO `diary_circle` VALUES (4, 2, '1234', 0, 0, '2026-03-20 09:43:03', '2026-05-25 17:04:51');
-INSERT INTO `diary_circle` VALUES (7, 5, 'asdfghjkslfngirbhg', 0, 0, '2026-05-25 17:11:00', '2026-05-25 17:11:00');
-INSERT INTO `diary_circle` VALUES (8, 5, 'egsuafydijopkebwhrbfs\n', 0, 0, '2026-05-25 17:11:18', '2026-05-25 17:11:18');
+INSERT INTO `diary_circle` VALUES (1, 3, '123', '2026-03-19 15:25:52', '2026-03-20 09:42:49');
+INSERT INTO `diary_circle` VALUES (3, 3, '123356', '2026-03-19 16:18:40', '2026-03-20 09:49:04');
+INSERT INTO `diary_circle` VALUES (4, 2, '1234', '2026-03-20 09:43:03', '2026-05-25 17:04:51');
+INSERT INTO `diary_circle` VALUES (7, 5, 'asdfghjkslfngirbhg', '2026-05-25 17:11:00', '2026-05-25 17:11:00');
+INSERT INTO `diary_circle` VALUES (8, 5, 'egsuafydijopkebwhrbfs\n', '2026-05-25 17:11:18', '2026-05-25 17:11:18');
 
 -- ----------------------------
 -- Table structure for diary_circle_like

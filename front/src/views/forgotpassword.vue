@@ -1,6 +1,13 @@
 <template>
-    <!-- 背景 -->
     <div class="container">
+        <!-- 视频背景（与登录页一致） -->
+        <div class="video-background">
+            <video autoplay muted loop playsinline class="background-video">
+                <source src="/背景.mp4" type="video/mp4">
+                您的浏览器不支持视频标签。
+            </video>
+            <div class="video-overlay"></div>
+        </div>
         <!-- 左侧栏 -->
         <div class="left-bar">
             <ul>
@@ -23,7 +30,7 @@
         <!-- 右侧栏 -->
         <div class="right-bar">
             <div class="logo">字迹-忘记密码</div>
-            <div class="form">
+            <div class="form auth-transparent-form">
                 <div class="account-select">
                     <!-- 第一步：手机号验证 -->
                     <div v-if="step === 1" class="step-form">
@@ -115,6 +122,7 @@ import {
   ElMessage
 } from 'element-plus'
 import service, { forgotPassword } from '@/api/auth'
+import '@/styles/auth-transparent-form.css'
 
 const router = useRouter()
 
@@ -279,7 +287,7 @@ const resetPassword = async () => {
 
 <style scoped>
 .container {
-    
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -287,9 +295,43 @@ const resetPassword = async () => {
     gap: 10px;
     padding: 20px;
     box-sizing: border-box;
-    background: linear-gradient(135deg, #2985fe, #5ed1ff);
+    overflow: hidden;
 }
+
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.background-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+}
+
 .left-bar {
+    position: relative;
+    z-index: 1;
     flex: 1;
     max-width: 55%;
 }
@@ -340,6 +382,8 @@ const resetPassword = async () => {
 }
 
 .right-bar {
+    position: relative;
+    z-index: 1;
     flex: 1;
     max-width: 400px;
     display: flex;
@@ -385,7 +429,6 @@ const resetPassword = async () => {
 .step-form h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #333;
 }
 .form-actions {
     display: flex;

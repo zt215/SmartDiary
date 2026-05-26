@@ -21,6 +21,11 @@
         WHERE diary_circle_id = #{diaryCircleId} AND user_id = #{userId}
     </delete>
 
+    <delete id="deleteByDiaryCircleId">
+        DELETE FROM diary_circle_like
+        WHERE diary_circle_id = #{diaryCircleId}
+    </delete>
+
     <!-- 查询用户是否已点赞某动态 -->
     <select id="selectByDiaryCircleIdAndUserId" resultMap="DiaryCircleLikeResultMap">
         SELECT * FROM diary_circle_like 

@@ -16,7 +16,9 @@ public interface DiaryCircleLikeMapper {
      * 删除点赞记录
      */
     int deleteByDiaryCircleIdAndUserId(@Param("diaryCircleId") Integer diaryCircleId, @Param("userId") Integer userId);
-    
+
+    int deleteByDiaryCircleId(@Param("diaryCircleId") Integer diaryCircleId);
+
     /**
      * 查询用户是否已点赞某动态
      */

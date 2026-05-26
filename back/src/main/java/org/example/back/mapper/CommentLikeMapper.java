@@ -16,7 +16,11 @@ public interface CommentLikeMapper {
      * 删除点赞记录
      */
     int deleteByCommentIdAndUserId(@Param("commentId") Integer commentId, @Param("userId") Integer userId);
-    
+
+    int deleteByCommentId(@Param("commentId") Integer commentId);
+
+    int deleteByCircleId(@Param("circleId") Integer circleId);
+
     /**
      * 查询用户是否已点赞某评论
      */

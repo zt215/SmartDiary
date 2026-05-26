@@ -21,6 +21,17 @@
         WHERE comment_id = #{commentId} AND user_id = #{userId}
     </delete>
 
+    <delete id="deleteByCommentId">
+        DELETE FROM comment_like
+        WHERE comment_id = #{commentId}
+    </delete>
+
+    <delete id="deleteByCircleId">
+        DELETE cl FROM comment_like cl
+        INNER JOIN comment c ON cl.comment_id = c.id
+        WHERE c.circle_id = #{circleId}
+    </delete>
+
     <!-- 查询用户是否已点赞某评论 -->
     <select id="selectByCommentIdAndUserId" resultMap="CommentLikeResultMap">
         SELECT * FROM comment_like 

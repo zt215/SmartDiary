@@ -11,60 +11,64 @@
         <result property="likeCount" column="like_count"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
-        <!-- 关联用户信息 -->
         <result property="userName" column="name"/>
         <result property="userAvatar" column="avatar"/>
     </resultMap>
 
-    <!-- 添加评论 -->
+    <sql id="CommentSelectColumns">
+        c.id,
+        c.circle_id,
+        c.user_id,
+        c.content,
+        c.parent_id,
+        c.create_time,
+        c.update_time,
+        (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.id) AS like_count
+    </sql>
+
     <insert id="insert" parameterType="org.example.back.pojo.Comment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO comment (circle_id, user_id, content, parent_id, like_count, create_time, update_time)
-        VALUES (#{circleId}, #{userId}, #{content}, #{parentId}, 0, NOW(), NOW())
+        INSERT INTO comment (circle_id, user_id, content, parent_id, create_time, update_time)
+        VALUES (#{circleId}, #{userId}, #{content}, #{parentId}, NOW(), NOW())
     </insert>
 
-    <!-- 删除评论 -->
     <delete id="deleteById">
         DELETE FROM comment WHERE id = #{id}
     </delete>
 
-    <!-- 根据 ID 查询评论 -->
+    <delete id="deleteByCircleId">
+        DELETE FROM comment WHERE circle_id = #{circleId}
+    </delete>
+
     <select id="selectById" resultMap="CommentResultMap">
-        SELECT c.*, u.name, u.avatar
+        SELECT
+        <include refid="CommentSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
         WHERE c.id = #{id}
     </select>
 
-    <!-- 根据动态 ID 查询所有评论（带用户信息） -->
     <select id="selectByCircleId" resultMap="CommentResultMap">
-        SELECT c.*, u.name, u.avatar
+        SELECT
+        <include refid="CommentSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
         WHERE c.circle_id = #{circleId}
         ORDER BY c.create_time ASC
     </select>
 
-    <!-- 根据父评论 ID 查询回复 -->
     <select id="selectByParentId" resultMap="CommentResultMap">
-        SELECT c.*, u.name, u.avatar
+        SELECT
+        <include refid="CommentSelectColumns"/>,
+        u.name,
+        u.avatar
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
         WHERE c.parent_id = #{parentId}
         ORDER BY c.create_time ASC
     </select>
-
-    <!-- 增加点赞数 -->
-    <update id="incrementLikeCount">
-        UPDATE comment
-        SET like_count = like_count + 1
-        WHERE id = #{id}
-    </update>
-
-    <!-- 减少点赞数 -->
-    <update id="decrementLikeCount">
-        UPDATE comment
-        SET like_count = GREATEST(0, like_count - 1)
-        WHERE id = #{id}
-    </update>
 
 </mapper>
