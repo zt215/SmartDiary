@@ -39,123 +39,6 @@
 
         <!-- 内容显示 -->
         <div class="diary-content" v-html="diary.content"></div>
-        
-        <!-- 评论区 -->
-        <div class="comment-section">
-          <div class="comment-header">
-            <h3>评论</h3>
-            <span class="comment-count">({{ totalCommentCount }})</span>
-          </div>
-          
-          <!-- 评论列表 -->
-          <div class="comment-list">
-            <div 
-              v-for="comment in commentList" 
-              :key="comment.id" 
-              class="comment-item"
-            >
-              <div class="comment-header-row">
-                <img :src="comment.userAvatar" :alt="comment.userName" class="comment-avatar" />
-                <div class="comment-user-info">
-                  <span class="comment-user-name">{{ comment.userName }}</span>
-                  <span class="comment-time">{{ formatCommentTime(comment.createTime) }}</span>
-                </div>
-              </div>
-              <div
-                class="comment-content"
-                :class="{ 'is-replyable': canReplyTo(comment) }"
-                @click="onCommentBodyClick(comment)"
-              >
-                {{ comment.content }}
-              </div>
-              <div class="comment-footer">
-                <button class="comment-action-btn" @click.stop="likeComment(comment)">
-                  <i class="icon-like"></i> {{ comment.likeCount || 0 }}
-                </button>
-                <button 
-                  v-if="canDeleteComment(comment)" 
-                  class="comment-action-btn delete-btn" 
-                  @click.stop="deleteComment(comment)"
-                >
-                  删除
-                </button>
-              </div>
-              
-              <!-- 回复列表 -->
-              <div v-if="comment.replies && comment.replies.length > 0" class="reply-list">
-                <div 
-                  v-for="reply in getVisibleReplies(comment)" 
-                  :key="reply.id" 
-                  class="reply-item"
-                >
-                  <div class="reply-header-row">
-                    <img :src="reply.userAvatar" :alt="reply.userName" class="reply-avatar" />
-                    <div class="reply-user-info">
-                      <span class="reply-user-name">{{ reply.userName }}</span>
-                      <span class="reply-time">{{ formatCommentTime(reply.createTime) }}</span>
-                    </div>
-                  </div>
-                  <div
-                    class="reply-content"
-                    :class="{ 'is-replyable': canReplyTo(reply) }"
-                    @click="onReplyBodyClick(comment, reply)"
-                  >
-                    {{ reply.content }}
-                  </div>
-                  <div v-if="canDeleteComment(reply)" class="reply-footer">
-                    <button
-                      class="comment-action-btn delete-btn"
-                      @click.stop="deleteComment(reply)"
-                    >
-                      删除
-                    </button>
-                  </div>
-                </div>
-                <button
-                  v-if="hiddenReplyCount(comment) > 0"
-                  type="button"
-                  class="reply-toggle-btn"
-                  @click="expandReplies(comment)"
-                >
-                  展开 {{ hiddenReplyCount(comment) }} 条回复
-                </button>
-                <button
-                  v-else-if="isRepliesExpanded(comment) && (comment.replies?.length || 0) > REPLY_VISIBLE_LIMIT"
-                  type="button"
-                  class="reply-toggle-btn"
-                  @click="collapseReplies(comment)"
-                >
-                  收起回复
-                </button>
-              </div>
-            </div>
-            
-            <!-- 空状态 -->
-            <div v-if="commentList.length === 0" class="empty-comments">
-              <p>暂无评论，快来抢沙发吧！</p>
-            </div>
-          </div>
-          
-          <!-- 发布评论框 -->
-          <div class="publish-comment-box">
-            <div class="publish-comment-main">
-              <div v-if="isReplyMode" class="reply-mode-bar">
-                <span>正在回复 @{{ replyTarget.userName }}</span>
-                <button type="button" class="cancel-reply-btn" @click="cancelReply">取消</button>
-              </div>
-              <textarea 
-                ref="commentInputRef"
-                v-model="newComment" 
-                :placeholder="commentInputPlaceholder" 
-                class="comment-input"
-                rows="3"
-              ></textarea>
-            </div>
-            <button class="submit-comment-btn" @click="submitComment" :disabled="!newComment.trim()">
-              {{ submitButtonText }}
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- 编辑模式 -->
@@ -180,14 +63,12 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
 import { getDiaryById, updateDiary, deleteDiary as deleteDiaryApi } from '../api/diary'
-import { getComments, addComment, toggleCommentLike, deleteComment as deleteCommentApi } from '../api/comment'
-import { useCommentReplies, REPLY_VISIBLE_LIMIT } from '../composables/useCommentReplies'
 
 export default {
   name: 'DiaryDetailView',
@@ -209,47 +90,8 @@ export default {
       title: '',
       content: ''
     })
-    // 评论相关
-    const commentList = ref([])
-    const newComment = ref('')
-    const commentInputRef = ref(null)
-    const isOwner = ref(false) // 是否是日记所有者
-    const currentUserId = ref(null) // 当前登录用户 ID
-
-    const {
-      replyTarget,
-      canReplyTo,
-      cancelReply,
-      commentInputPlaceholder,
-      isReplyMode,
-      submitButtonText,
-      getVisibleReplies,
-      hiddenReplyCount,
-      isRepliesExpanded,
-      expandReplies,
-      collapseReplies,
-      handleReplyClick,
-      appendSubmittedComment,
-      removeCommentFromList
-    } = useCommentReplies(() => currentUserId.value)
-
-    const totalCommentCount = computed(() =>
-      commentList.value.reduce((sum, c) => sum + 1 + (c.replies?.length || 0), 0)
-    )
-
-    const focusCommentInput = () => {
-      nextTick(() => commentInputRef.value?.focus())
-    }
-
-    const onCommentBodyClick = (comment) => {
-      handleReplyClick(comment)
-      focusCommentInput()
-    }
-
-    const onReplyBodyClick = (rootComment, reply) => {
-      handleReplyClick(rootComment, reply)
-      focusCommentInput()
-    }
+    const isOwner = ref(false)
+    const currentUserId = ref(null)
 
     // 加载日记数据
     const loadDiary = async () => {
@@ -271,9 +113,6 @@ export default {
           diary.value = res.data
           // 判断是否是日记所有者
           isOwner.value = currentUserId.value && diary.value.userId === currentUserId.value
-          
-          // 加载评论
-          loadComments(diaryId)
         } else {
           ElMessage.error(res?.message || '加载日记失败')
           router.push('/home')
@@ -284,139 +123,7 @@ export default {
         router.push('/home')
       }
     }
-        
-    // 加载评论
-    const loadComments = async (circleId) => {
-      try {
-        console.log('加载评论，userId:', currentUserId.value)
-        const res = await getComments(circleId, currentUserId.value)
-        if (res && res.success) {
-          commentList.value = res.data || []
-          console.log('评论数据:', commentList.value)
-          if (commentList.value.length > 0) {
-            console.log('第一条评论的 isLiked:', commentList.value[0].isLiked)
-          }
-        }
-      } catch (e) {
-        console.error('加载评论失败:', e)
-      }
-    }
-        
-    // 发表评论
-    const submitComment = async () => {
-      if (!newComment.value.trim()) {
-        ElMessage.warning('请输入评论内容')
-        return
-      }
-          
-      // 获取用户信息
-      const userStr = localStorage.getItem('userInfo')
-      if (!userStr) {
-        ElMessage.error('请先登录')
-        return
-      }
-          
-      const user = JSON.parse(userStr)
-          
-      const parentId = replyTarget.value?.parentId ?? null
-      const rootComment = replyTarget.value?.rootComment ?? null
 
-      try {
-        const res = await addComment({
-          circleId: diary.value.id,
-          userId: user.id,
-          content: newComment.value,
-          parentId
-        })
-            
-        if (res && res.success) {
-          appendSubmittedComment(commentList.value, res.data, user, parentId, rootComment)
-          newComment.value = ''
-          ElMessage.success(parentId ? '回复成功' : '评论成功')
-        } else {
-          ElMessage.error(res?.message || '评论失败')
-        }
-      } catch (e) {
-        console.error('评论失败:', e)
-        ElMessage.error('评论失败：' + (e.message || '网络错误'))
-      }
-    }
-        
-    // 点赞评论
-    const likeComment = (comment) => {
-      console.log('点击点赞，评论:', comment)
-      console.log('评论 ID:', comment.id)
-      console.log('当前 isLiked:', comment.isLiked)
-      
-      const userStr = localStorage.getItem('userInfo')
-      console.log('localStorage userInfo:', userStr)
-      
-      if (!userStr) {
-        ElMessage.warning('请先登录')
-        return
-      }
-          
-      const user = JSON.parse(userStr)
-      console.log('解析后的用户:', user)
-      console.log('用户 ID:', user.id)
-      
-      const isLiked = !comment.isLiked
-      console.log('准备调用 API，isLiked:', isLiked)
-      
-      toggleCommentLike(comment.id, isLiked, user.id).then(res => {
-        console.log('API 返回结果:', res)
-        if (res && res.success) {
-          comment.isLiked = isLiked
-          if (isLiked) {
-            comment.likeCount = (comment.likeCount || 0) + 1
-          } else {
-            comment.likeCount = Math.max(0, (comment.likeCount || 0) - 1)
-          }
-        } else {
-          ElMessage.error(res?.message || '操作失败')
-        }
-      }).catch(err => {
-        console.error('点赞评论失败:', err)
-        ElMessage.error('操作失败')
-      })
-    }
-    
-    // 判断是否可以删除评论
-    const canDeleteComment = (comment) => {
-      if (!currentUserId.value) return false
-      // 评论作者可以删除自己的评论，或者日记作者可以删除任何评论
-      return comment.userId === currentUserId.value || isOwner.value
-    }
-    
-    // 删除评论
-    const deleteComment = (comment) => {
-      ElMessageBox.confirm(
-        '确定要删除这条评论吗？',
-        '删除评论',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-        }
-      ).then(async () => {
-        try {
-          const res = await deleteCommentApi(comment.id, currentUserId.value, diary.value.id)
-          if (res && res.success) {
-            ElMessage.success('评论已删除')
-            // 从评论列表中移除
-            removeCommentFromList(commentList.value, comment)
-          } else {
-            ElMessage.error(res?.message || '删除失败')
-          }
-        } catch (e) {
-          console.error('删除评论失败:', e)
-          ElMessage.error('删除失败：' + (e.message || '网络错误'))
-        }
-      }).catch(() => {
-        // 用户取消删除
-      })
-    }
-    
     // 删除日记
     const deleteDiary = () => {
       ElMessageBox.confirm(
@@ -443,20 +150,6 @@ export default {
       }).catch(() => {
         // 用户取消删除
       })
-    }
-        
-    // 格式化评论时间
-    const formatCommentTime = (time) => {
-      if (!time) return ''
-      if (typeof time === 'string') return time
-      const date = new Date(time)
-      const now = new Date()
-      const diff = now - date
-          
-      if (diff < 60000) return '刚刚'
-      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-      return date.toLocaleDateString('zh-CN')
     }
 
     // 初始化编辑器
@@ -594,35 +287,12 @@ export default {
       isOwner,
       saving,
       editForm,
-      commentList,
-      newComment,
-      commentInputRef,
-      replyTarget,
-      totalCommentCount,
-      canReplyTo,
-      cancelReply,
-      commentInputPlaceholder,
-      isReplyMode,
-      submitButtonText,
-      getVisibleReplies,
-      hiddenReplyCount,
-      isRepliesExpanded,
-      expandReplies,
-      collapseReplies,
-      onCommentBodyClick,
-      onReplyBodyClick,
-      REPLY_VISIBLE_LIMIT,
       enterEditMode,
       cancelEdit,
       saveDiary,
       deleteDiary,
       goBack,
-      formatDate,
-      submitComment,
-      likeComment,
-      canDeleteComment,
-      deleteComment,
-      formatCommentTime
+      formatDate
     }
   }
 }
@@ -871,254 +541,5 @@ export default {
     padding: 1rem;
     min-height: 300px;
   }
-}
-
-/* 评论区样式 */
-.comment-section {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid #e0e0e0;
-}
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.comment-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.comment-count {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.comment-list {
-  max-height: 500px;
-  overflow-y: auto;
-  margin-bottom: 1.5rem;
-}
-
-.comment-item {
-  padding: 1rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.comment-item:last-child {
-  border-bottom: none;
-}
-
-.comment-header-row,
-.reply-header-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.comment-avatar,
-.reply-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  margin-right: 0.75rem;
-}
-
-.comment-user-info,
-.reply-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.comment-user-name,
-.reply-user-name {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.comment-time,
-.reply-time {
-  font-size: 12px;
-  color: #999;
-}
-
-.comment-content,
-.reply-content {
-  color: #333;
-  line-height: 1.6;
-  font-size: 14px;
-  margin-bottom: 0.5rem;
-}
-
-.comment-content.is-replyable,
-.reply-content.is-replyable {
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 0.25rem 0.35rem;
-  margin-left: -0.35rem;
-  transition: background-color 0.15s;
-}
-
-.comment-content.is-replyable:hover,
-.reply-content.is-replyable:hover {
-  background-color: #f0f0f0;
-}
-
-.reply-footer {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.reply-toggle-btn {
-  display: block;
-  width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.35rem 0;
-  border: none;
-  background: none;
-  color: #409eff;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.reply-toggle-btn:hover {
-  text-decoration: underline;
-}
-
-.publish-comment-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.reply-mode-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #666;
-}
-
-.cancel-reply-btn {
-  border: none;
-  background: none;
-  color: #409eff;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 0;
-}
-
-.cancel-reply-btn:hover {
-  text-decoration: underline;
-}
-
-.comment-footer {
-  display: flex;
-  gap: 1rem;
-}
-
-.comment-action-btn {
-  padding: 0.25rem 0.75rem;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 16px;
-  font-size: 12px;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.comment-action-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.reply-list {
-  margin-top: 1rem;
-  padding-left: 3rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 1rem;
-}
-
-.reply-item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.reply-item:last-child {
-  border-bottom: none;
-}
-
-.empty-comments {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: #999;
-}
-
-.publish-comment-box {
-  display: flex;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
-  margin-top: 1rem;
-}
-
-.comment-input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  resize: none;
-  font-family: inherit;
-  font-size: 14px;
-  background-color: #fff;
-  color: #333;
-}
-
-.comment-input:focus {
-  outline: none;
-  border-color: #409eff;
-}
-
-.submit-comment-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.submit-comment-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-.submit-comment-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 删除按钮样式 */
-.comment-action-btn.delete-btn {
-  color: var(--el-color-danger);
-}
-
-.comment-action-btn.delete-btn:hover {
-  background-color: var(--el-color-danger-light-9);
 }
 </style>
