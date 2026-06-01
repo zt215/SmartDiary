@@ -34,32 +34,6 @@
     </div>
 
     <div class="circle-body-scroll">
-      <!-- 发布框 -->
-      <div v-if="showPublishBox" class="publish-box">
-        <div class="publish-header">
-          <h3>发布动态</h3>
-          <button class="close-publish-btn" @click="hidePublishBox">
-            <span>&times;</span>
-          </button>
-        </div>
-        <div class="publisher-info">
-          <img :src="user.avatar" :alt="user.name" class="publisher-avatar" />
-          <div class="publisher-content">
-            <textarea 
-              v-model="newDiaryContent" 
-              placeholder="分享你的日记片段..." 
-              class="publish-input"
-              rows="3"
-            ></textarea>
-            <div class="publish-actions">
-              <button class="publish-btn" @click="publishDiary" :disabled="!newDiaryContent.trim()">
-                发布
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- 日记列表 -->
       <div class="diary-list">
         <div 
@@ -79,7 +53,12 @@
             </div>
           </div>
           <div class="diary-content">
-            <p class="diary-text">{{ diary.content }}</p>
+            <div
+              v-if="hasRichTextContent(diary.content)"
+              class="diary-text diary-rich-content"
+              v-html="diary.content"
+            ></div>
+            <p v-else class="diary-text">无内容</p>
           </div>
           <div class="diary-footer">
             <div class="diary-stats">
@@ -117,12 +96,88 @@
         <button @click="loadMore" class="load-more-btn">加载更多</button>
       </div>
     </div>
+
+    <el-dialog
+      v-model="showPublishBox"
+      title="发布动态"
+      width="680px"
+      top="6vh"
+      append-to-body
+      destroy-on-close
+      class="publish-dialog"
+      :close-on-click-modal="false"
+      @opened="onPublishDialogOpened"
+      @closed="onPublishDialogClosed"
+    >
+      <p v-if="publishSourceTitle" class="publish-source-tip">
+        来自日记「{{ publishSourceTitle }}」，此处修改不会影响原日记
+      </p>
+      <div ref="publishEditor" class="publish-quill-wrap"></div>
+      <template #footer>
+        <div class="publish-dialog-footer">
+          <el-button @click="hidePublishBox">取消</el-button>
+          <el-button type="primary" @click="publishDiary">发布</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showDiaryPicker"
+      title="选择要发布的日记"
+      width="560px"
+      destroy-on-close
+      @closed="resetPickerFilters"
+    >
+      <div v-if="pickerLoading" class="picker-status">加载中...</div>
+      <template v-else>
+        <div class="picker-filters">
+          <el-date-picker
+            v-model="pickerFilterDate"
+            type="date"
+            placeholder="按日期筛选"
+            value-format="YYYY-MM-DD"
+            clearable
+            class="picker-date-input"
+          />
+          <el-input
+            v-model="pickerKeyword"
+            placeholder="搜索标题或正文"
+            clearable
+            class="picker-keyword-input"
+          />
+        </div>
+        <div v-if="allMyDiaries.length === 0" class="picker-status">暂无日记，请先在首页写日记</div>
+        <div v-else-if="filteredPickerDiaries.length === 0" class="picker-status">没有符合条件的日记</div>
+        <ul v-else class="diary-picker-list">
+          <li
+            v-for="d in filteredPickerDiaries"
+            :key="d.id"
+            class="diary-picker-item"
+            @click="selectDiaryForPublish(d)"
+          >
+            <strong>{{ d.title || '无标题' }}</strong>
+            <span class="picker-date">{{ formatPickerDate(d.createTime) }}</span>
+            <p>{{ getCircleListPreview(d.content) }}</p>
+          </li>
+        </ul>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getDiaryCircleList, publishDiaryCircle, toggleLike } from '../api/diaryCircle';
+import { getDiariesByUserId } from '../api/diary';
+import {
+  hasRichTextContent,
+  getCircleListPreview,
+  buildCircleContentFromDiary,
+  stripHtml,
+  createQuillModules
+} from '../utils/richContent';
 
 export default {
   name: 'DiaryCircle',
@@ -133,13 +188,21 @@ export default {
         name: '用户',
         avatar: '/path/to/avatar.jpg'
       },
-      newDiaryContent: '',
+      publishHtml: '',
+      publishQuill: null,
+      showDiaryPicker: false,
+      allMyDiaries: [],
+      pickerFilterDate: '',
+      pickerKeyword: '',
+      pickerLoading: false,
+      publishSourceTitle: '',
       diaryList: [],
       page: 1,
       pageSize: 10,
       hasMore: true,
       loading: false,
       showPublishBox: false,
+      pendingPublishHtml: '',
       feedFilter: 'all'
     };
   },
@@ -149,7 +212,25 @@ export default {
         return '好友还没有发布动态，去添加好友或看看全部动态吧'
       }
       return '暂无动态，快来发布第一篇日记吧！'
+    },
+    filteredPickerDiaries () {
+      let list = this.allMyDiaries
+      if (this.pickerFilterDate) {
+        list = list.filter((d) => this.getDiaryDateKey(d.createTime) === this.pickerFilterDate)
+      }
+      const kw = (this.pickerKeyword || '').trim().toLowerCase()
+      if (kw) {
+        list = list.filter((d) => {
+          const title = (d.title || '').toLowerCase()
+          const body = stripHtml(d.content || '').toLowerCase()
+          return title.includes(kw) || body.includes(kw)
+        })
+      }
+      return list
     }
+  },
+  beforeUnmount () {
+    this.destroyPublishEditor()
   },
   mounted() {
     // 获取用户信息
@@ -197,11 +278,7 @@ export default {
           type: 'info'
         }
       ).then(() => {
-        // 点击"新建发布"
-        this.showPublishBox = true;
-        this.$nextTick(() => {
-          document.querySelector('.publish-input')?.focus();
-        });
+        this.openPublishWithDraft('', '');
       }).catch((action) => {
         if (action === 'cancel') {
           // 点击"使用已有日记"
@@ -211,12 +288,110 @@ export default {
     },
     hidePublishBox() {
       this.showPublishBox = false;
-      this.newDiaryContent = '';
     },
-    selectFromDiaries() {
-      // TODO: 从用户的日记中选择一篇来发布
-      ElMessage.info('功能开发中：从日记列表选择');
-      // 后续可以实现：弹出一个对话框，显示用户的日记列表，选择一篇发布到字迹圈
+    onPublishDialogOpened () {
+      this.$nextTick(() => {
+        this.destroyPublishEditor();
+        this.$nextTick(() => {
+          this.initPublishEditor(this.pendingPublishHtml || '');
+        });
+      });
+    },
+    onPublishDialogClosed () {
+      this.publishSourceTitle = '';
+      this.pendingPublishHtml = '';
+      this.destroyPublishEditor();
+    },
+    openPublishWithDraft (html = '', sourceTitle = '') {
+      this.pendingPublishHtml = html;
+      this.publishSourceTitle = sourceTitle;
+      this.showPublishBox = true;
+    },
+    initPublishEditor (initialHtml = '') {
+      const el = this.$refs.publishEditor
+      if (!el || this.publishQuill) return
+      this.publishQuill = new Quill(el, {
+        theme: 'snow',
+        placeholder: '分享你的心情，可插入图片、链接...',
+        modules: createQuillModules((msg) => ElMessage.warning(msg))
+      })
+      const syncHtml = () => {
+        this.publishHtml = this.publishQuill.root.innerHTML
+      }
+      this.publishQuill.on('text-change', syncHtml)
+      if (initialHtml) {
+        this.publishQuill.root.innerHTML = initialHtml
+      }
+      syncHtml()
+    },
+    resetPickerFilters () {
+      this.pickerFilterDate = ''
+      this.pickerKeyword = ''
+    },
+    getDiaryDateKey (time) {
+      if (!time) return ''
+      const d = typeof time === 'string' ? new Date(time) : time
+      if (Number.isNaN(d.getTime())) return ''
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    },
+    getPublishContent () {
+      if (this.publishQuill) {
+        return this.publishQuill.root.innerHTML
+      }
+      return this.publishHtml
+    },
+    destroyPublishEditor () {
+      if (this.$refs.publishEditor) {
+        this.$refs.publishEditor.innerHTML = ''
+      }
+      this.publishQuill = null
+      this.publishHtml = ''
+    },
+    hasRichTextContent,
+    getCircleListPreview,
+    formatPickerDate (time) {
+      if (!time) return ''
+      const d = typeof time === 'string' ? new Date(time) : time
+      return d.toLocaleDateString('zh-CN')
+    },
+    async selectFromDiaries () {
+      if (!this.user?.id) {
+        ElMessage.error('请先登录')
+        return
+      }
+      this.resetPickerFilters()
+      this.showDiaryPicker = true
+      this.pickerLoading = true
+      this.allMyDiaries = []
+      try {
+        const res = await getDiariesByUserId(this.user.id)
+        if (res?.success) {
+          this.allMyDiaries = (res.data || []).sort(
+            (a, b) => new Date(b.createTime) - new Date(a.createTime)
+          )
+        } else {
+          ElMessage.error(res?.message || '加载日记失败')
+          this.showDiaryPicker = false
+        }
+      } catch (e) {
+        console.error(e)
+        ElMessage.error('加载日记失败')
+        this.showDiaryPicker = false
+      } finally {
+        this.pickerLoading = false
+      }
+    },
+    selectDiaryForPublish (diary) {
+      const draft = buildCircleContentFromDiary(diary)
+      if (!hasRichTextContent(draft)) {
+        ElMessage.warning('该日记没有可发布的内容')
+        return
+      }
+      this.showDiaryPicker = false
+      this.openPublishWithDraft(draft, diary.title || '无标题')
     },
     async loadDiaries() {
       if (this.loading) return;
@@ -260,8 +435,9 @@ export default {
       }
     },
     async publishDiary() {
-      if (!this.newDiaryContent.trim()) {
-        ElMessage.warning('请输入内容');
+      const content = this.getPublishContent()
+      if (!hasRichTextContent(content)) {
+        ElMessage.warning('请输入文字或插入图片后再发布');
         return;
       }
       
@@ -271,10 +447,9 @@ export default {
       }
       
       try {
-        // 调用后端 API 发布日记
         const res = await publishDiaryCircle({
           userId: this.user.id,
-          content: this.newDiaryContent
+          content
         });
         
         if (res && res.success) {
@@ -290,8 +465,7 @@ export default {
           if (this.feedFilter === 'all') {
             this.diaryList.unshift(newDiary);
           }
-          this.newDiaryContent = '';
-          this.showPublishBox = false;
+          this.hidePublishBox();
           
           ElMessage.success(this.feedFilter === 'friends' ? '发布成功，可在「全部」中查看' : '发布成功');
         } else {
@@ -375,6 +549,68 @@ export default {
   --calendar-today-bg: #007bff;
   --calendar-event-bg: #ffc107;
   --hover-bg: #f0f0f0;
+}
+
+/* 发布弹窗（append-to-body，需全局样式） */
+.el-dialog.publish-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 12vh);
+  margin-bottom: 6vh;
+  overflow: hidden;
+}
+
+.el-dialog.publish-dialog .el-dialog__header {
+  flex-shrink: 0;
+}
+
+.el-dialog.publish-dialog .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 8px;
+  padding-bottom: 12px;
+}
+
+.el-dialog.publish-dialog .el-dialog__footer {
+  flex-shrink: 0;
+  padding: 12px 20px 18px;
+  border-top: 1px solid #eee;
+}
+
+.publish-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.publish-dialog .publish-source-tip {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.publish-dialog .publish-quill-wrap {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.publish-dialog .publish-quill-wrap .ql-toolbar {
+  border: none;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.publish-dialog .publish-quill-wrap .ql-container {
+  border: none;
+  font-size: 14px;
+  max-height: 42vh;
+}
+
+.publish-dialog .publish-quill-wrap .ql-editor {
+  min-height: 140px;
+  max-height: 42vh;
+  overflow-y: auto;
 }
 </style>
 
@@ -496,110 +732,82 @@ export default {
   font-weight: bold;
 }
 
-/* 发布框 */
-.publish-box {
-  background-color: var(--bg-color);
-  padding: 1rem;
+.picker-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.publish-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
+.picker-date-input {
+  width: 160px;
 }
 
-.publish-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.close-publish-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background-color: transparent;
-  color: var(--text-color);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.close-publish-btn:hover {
-  background-color: var(--hover-bg);
-  opacity: 0.7;
-}
-
-.publisher-info {
-  display: flex;
-  gap: 1rem;
-}
-
-.publisher-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.publisher-content {
+.picker-keyword-input {
   flex: 1;
+  min-width: 180px;
 }
 
-.publish-input {
-  width: 100%;
+.diary-rich-content {
+  line-height: 1.6;
+  font-size: 15px;
+  word-break: break-word;
+  max-height: 280px;
+  overflow: hidden;
+}
+
+.diary-rich-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.25rem 0;
+}
+
+.diary-rich-content :deep(p) {
+  margin: 0 0 0.5rem;
+}
+
+.diary-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.diary-picker-item {
   padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  resize: none;
-  font-family: inherit;
-  font-size: 14px;
-  transition: border-color 0.2s;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-.publish-input:focus {
-  outline: none;
-  border-color: var(--calendar-today-bg);
-}
-
-.publish-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.5rem;
-}
-
-.publish-btn {
-  padding: 0.5rem 1.5rem;
-  background-color: var(--calendar-today-bg);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
+  border-bottom: 1px solid var(--border-color, #eee);
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: background-color 0.15s;
 }
 
-.publish-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-2px);
+.diary-picker-item:hover {
+  background: var(--hover-bg, #f5f5f5);
 }
 
-.publish-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.diary-picker-item strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.picker-date {
+  font-size: 12px;
+  color: #999;
+  margin-left: 0.5rem;
+}
+
+.diary-picker-item p {
+  margin: 0.35rem 0 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.picker-status {
+  text-align: center;
+  padding: 1.5rem;
+  color: #999;
 }
 
 /* 日记列表 */

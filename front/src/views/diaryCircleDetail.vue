@@ -30,10 +30,8 @@
           </div>
         </div>
 
-        <!-- 动态内容 -->
-        <div class="diary-content">
-          {{ diary.content }}
-        </div>
+        <!-- 动态内容（富文本，与日记一致） -->
+        <div class="diary-content diary-rich-content" v-html="diary.content"></div>
 
         <!-- 统计信息 -->
         <div class="diary-stats">
@@ -640,8 +638,22 @@ export default {
   line-height: 1.8;
   color: var(--text-color);
   margin-bottom: 2rem;
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.diary-rich-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+}
+
+.diary-rich-content :deep(p) {
+  margin: 0 0 1rem;
+}
+
+.diary-rich-content :deep(a) {
+  color: var(--calendar-today-bg);
 }
 
 .diary-stats {

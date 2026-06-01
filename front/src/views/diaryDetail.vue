@@ -69,6 +69,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
 import { getDiaryById, updateDiary, deleteDiary as deleteDiaryApi } from '../api/diary'
+import { createQuillModules } from '../utils/richContent'
 
 export default {
   name: 'DiaryDetailView',
@@ -158,17 +159,7 @@ export default {
         quillEditor.value = new Quill(editorContainer.value, {
           theme: 'snow',
           placeholder: '开始记录你的心情吧...',
-          modules: {
-            toolbar: [
-              [{ 'header': [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              [{ 'color': [] }, { 'background': [] }],
-              [{ 'align': [] }],
-              ['link', 'image'],
-              ['clean']
-            ]
-          }
+          modules: createQuillModules((msg) => ElMessage.warning(msg))
         })
 
         // 监听内容变化

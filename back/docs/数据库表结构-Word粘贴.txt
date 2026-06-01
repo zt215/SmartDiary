@@ -23,7 +23,7 @@ theme	varchar	50	否	否	界面主题，默认 default
 id	int	—	是	主键	日记 ID，自增
 user_id	int	—	是	否	所属用户 ID
 title	varchar	255	是	否	标题
-content	text	—	否	否	正文（富文本 HTML）
+content	longtext	—	否	否	正文（富文本 HTML）
 create_time	datetime	—	是	否	创建时间
 update_time	datetime	—	是	否	更新时间
 
@@ -31,7 +31,7 @@ update_time	datetime	—	是	否	更新时间
 名称	类型	长度	是否不是 null	是否为键	注释
 id	int	—	是	主键	动态 ID，自增
 user_id	int	—	是	否	发布用户 ID
-content	text	—	是	否	动态正文
+content	longtext	—	是	否	动态正文（富文本）
 create_time	datetime	—	否	否	创建时间
 update_time	datetime	—	否	否	更新时间
 
