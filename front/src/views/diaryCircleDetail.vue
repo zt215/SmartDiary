@@ -4,7 +4,7 @@
     <header class="detail-header">
       <div class="header-left" @click="goBack">
         <span class="back-btn">&larr;</span>
-        <span class="back-text">回到字迹圈</span>
+        <span class="back-text">{{ backText }}</span>
       </div>
       <h1 class="header-title">动态详情</h1>
       <div class="header-right">
@@ -177,6 +177,17 @@ export default {
   setup() {
     const router = useRouter()
     const route = useRoute()
+
+    const backRoute = computed(() =>
+      route.query.from === 'friends' ? '/friends' : '/diary-circle'
+    )
+    const backText = computed(() =>
+      route.query.from === 'friends' ? '回到好友' : '回到字迹圈'
+    )
+    const goBackToList = () => {
+      router.push(backRoute.value)
+    }
+
     const diary = ref({
       id: null,
       userId: null,
@@ -242,7 +253,7 @@ export default {
       const circleId = route.params.id
       if (!circleId) {
         ElMessage.error('动态 ID 不存在')
-        router.push('/diary-circle')
+        router.push(backRoute.value)
         return
       }
 
@@ -257,12 +268,12 @@ export default {
           loadComments(circleId, currentUserId.value)
         } else {
           ElMessage.error(res?.message || '加载动态失败')
-          router.push('/diary-circle')
+          router.push(backRoute.value)
         }
       } catch (e) {
         console.error('加载动态错误:', e)
         ElMessage.error('加载动态失败：' + (e.message || '网络错误'))
-        router.push('/diary-circle')
+        router.push(backRoute.value)
       }
     }
 
@@ -399,7 +410,7 @@ export default {
         const res = await deleteDiaryCircle(diary.value.id, currentUserId.value)
         if (res && res.success) {
           ElMessage.success('动态删除成功')
-          router.push('/diary-circle')
+          router.push(backRoute.value)
         } else {
           ElMessage.error(res?.message || '删除失败')
         }
@@ -436,7 +447,7 @@ export default {
 
     // 返回
     const goBack = () => {
-      router.push('/diary-circle')
+      goBackToList()
     }
 
     const applyTheme = () => {
@@ -488,7 +499,8 @@ export default {
       deleteDiary,
       formatTime,
       formatCommentTime,
-      goBack
+      goBack,
+      backText
     }
   }
 }

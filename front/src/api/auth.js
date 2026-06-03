@@ -73,6 +73,15 @@ export function updateUser (data) {
   })
 }
 
+// 修改密码（需验证当前密码）
+export function changePassword (data) {
+  return service({
+    url: '/auth/change-password',
+    method: 'put',
+    data
+  })
+}
+
 // 删除用户（注销账号）
 export function deleteUser (id) {
   return service({

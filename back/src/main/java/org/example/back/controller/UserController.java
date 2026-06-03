@@ -58,6 +58,15 @@ public class UserController {
     public Map<String, Object> updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
+
+    @PutMapping("/change-password")
+    public Map<String, Object> changePassword(@RequestBody Map<String, Object> requestData) {
+        Object userIdObj = requestData.get("userId");
+        Integer userId = userIdObj instanceof Number ? ((Number) userIdObj).intValue() : null;
+        String oldPassword = (String) requestData.get("oldPassword");
+        String newPassword = (String) requestData.get("newPassword");
+        return userService.changePassword(userId, oldPassword, newPassword);
+    }
     
     @PutMapping("/update-theme")
     public Map<String, Object> updateTheme(@RequestBody Map<String, Object> data) {

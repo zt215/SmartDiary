@@ -17,6 +17,8 @@ public interface UserService {
     Map<String, Object> verifyCode(String phone, String verificationCode);
     
     Map<String, Object> updateUser(User user);
+
+    Map<String, Object> changePassword(Integer userId, String oldPassword, String newPassword);
     
     Map<String, Object> updateTheme(Integer userId, String theme);
     

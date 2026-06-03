@@ -125,13 +125,56 @@
                   v-model="addressCascaderValue"
                   :options="regionData"
                   :props="{ expandTrigger: 'hover' }"
-                  placeholder="请选择省 / 市 / 区"
                   clearable
                   filterable
                   style="width: 100%"
                 />
               </el-form-item>
             </el-form>
+
+            <!-- 修改密码 -->
+            <div class="password-section">
+              <h4 class="password-section-title">修改密码</h4>
+              <el-form :model="passwordForm" label-width="100px" label-position="left">
+                <el-form-item label="当前密码">
+                  <el-input
+                    v-model="passwordForm.oldPassword"
+                    type="password"
+                    placeholder="请输入当前密码"
+                    show-password
+                    autocomplete="current-password"
+                  />
+                </el-form-item>
+                <el-form-item label="新密码">
+                  <el-input
+                    v-model="passwordForm.newPassword"
+                    type="password"
+                    placeholder="至少8位，含字母和数字"
+                    show-password
+                    autocomplete="new-password"
+                  />
+                </el-form-item>
+                <el-form-item label="确认新密码">
+                  <el-input
+                    v-model="passwordForm.confirmPassword"
+                    type="password"
+                    placeholder="请再次输入新密码"
+                    show-password
+                    autocomplete="new-password"
+                  />
+                </el-form-item>
+                <el-form-item>
+                  <el-button
+                    type="primary"
+                    plain
+                    :loading="passwordChanging"
+                    @click="handleChangePassword"
+                  >
+                    修改密码
+                  </el-button>
+                </el-form-item>
+              </el-form>
+            </div>
           </template>
         </div>
 
@@ -207,7 +250,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { regionData } from 'element-china-area-data'
-import { updateUser, deleteUser } from '../api/auth'
+import { updateUser, deleteUser, changePassword } from '../api/auth'
 import {
   formatRegionAddressLabel,
   parseRegionCodesToCascaderValue,
@@ -248,6 +291,21 @@ export default {
       hideEmail: false
     })
     const privacySaving = ref(false)
+    const passwordForm = ref({
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    })
+    const passwordChanging = ref(false)
+    const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/
+
+    const resetPasswordForm = () => {
+      passwordForm.value = {
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }
+    }
 
     const syncPrivacyForm = () => {
       privacyForm.value = {
@@ -302,6 +360,7 @@ export default {
     const cancelEdit = () => {
       isEditing.value = false
       addressCascaderValue.value = []
+      resetPasswordForm()
       editForm.value = {
         name: '',
         phone: '',
@@ -380,6 +439,50 @@ export default {
       } catch (e) {
         console.error('图片处理错误:', e)
         ElMessage.error('图片处理失败，请重试')
+      }
+    }
+
+    const handleChangePassword = async () => {
+      const { oldPassword, newPassword, confirmPassword } = passwordForm.value
+      if (!oldPassword?.trim()) {
+        ElMessage.warning('请输入当前密码')
+        return
+      }
+      if (!newPassword?.trim()) {
+        ElMessage.warning('请输入新密码')
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        ElMessage.error('两次输入的新密码不一致')
+        return
+      }
+      if (!PASSWORD_REGEX.test(newPassword)) {
+        ElMessage.error('密码至少8位，且必须包含字母和数字')
+        return
+      }
+      if (oldPassword === newPassword) {
+        ElMessage.warning('新密码不能与当前密码相同')
+        return
+      }
+
+      passwordChanging.value = true
+      try {
+        const res = await changePassword({
+          userId: user.value.id,
+          oldPassword,
+          newPassword
+        })
+        if (res && res.success) {
+          ElMessage.success('密码修改成功')
+          resetPasswordForm()
+        } else {
+          ElMessage.error(res?.message || '密码修改失败')
+        }
+      } catch (e) {
+        console.error('修改密码错误:', e)
+        ElMessage.error('密码修改失败: ' + (e.message || '网络错误'))
+      } finally {
+        passwordChanging.value = false
       }
     }
 
@@ -564,6 +667,9 @@ export default {
       addressCascaderValue,
       privacyForm,
       privacySaving,
+      passwordForm,
+      passwordChanging,
+      handleChangePassword,
       formatRegionAddressLabel,
       formatDate,
       enterEditMode,
@@ -812,6 +918,19 @@ export default {
   font-size: 0.875rem;
   color: #999;
   margin-top: 0.25rem;
+}
+
+.password-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.password-section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .action-buttons {

@@ -87,7 +87,7 @@
                 <div class="mini-avatar-wrap">
                   <img v-if="f.avatar" :src="f.avatar" class="mini-avatar" alt="" />
                   <div v-else class="mini-avatar placeholder">{{ (f.name || '?').charAt(0) }}</div>
-                  <span v-if="hasNewFriendDiary(f)" class="friend-badge">1</span>
+                  <span v-if="getFriendUnreadCount(f) > 0" class="friend-badge">{{ friendUnreadBadgeText(f) }}</span>
                 </div>
 
                 <div class="user-meta">
@@ -319,10 +319,10 @@ import {
 
 import { getUserDiaries } from '../api/diaryCircle'
 import {
-  hasNewFriendDiary as checkNewFriendDiary,
-  getFriendDiarySeenAt,
   isNewFriendDiaryItem as checkNewFriendDiaryItem,
-  markFriendDiarySeen
+  markFriendDiaryItemSeen,
+  countNewFriendDiaryItems,
+  buildFriendUnreadCounts
 } from '@/utils/friendDiarySeen'
 import { formatRegionAddressLabel } from '@/utils/regionAddress'
 
@@ -362,13 +362,13 @@ export default {
 
       friendDiaries: [],
 
-      diarySeenBeforeOpen: 0,
-
       profileVisible: false,
 
       profileLoading: false,
 
-      friendProfile: null
+      friendProfile: null,
+
+      friendUnreadCounts: {}
 
     }
 
@@ -438,10 +438,41 @@ export default {
 
   },
 
+  activated () {
+    if (this.userId) {
+      this.refreshFriendUnreadCounts()
+    }
+  },
+
   methods: {
 
-    hasNewFriendDiary (f) {
-      return checkNewFriendDiary(this.userId, f.id, f.latestDiaryTime)
+    getFriendUnreadCount (f) {
+      if (!f?.id) return 0
+      return this.friendUnreadCounts[f.id] || 0
+    },
+
+    friendUnreadBadgeText (f) {
+      const n = this.getFriendUnreadCount(f)
+      if (n > 99) return '99+'
+      return String(n)
+    },
+
+    async refreshFriendUnreadCounts () {
+      if (!this.userId || !this.friends?.length) {
+        this.friendUnreadCounts = {}
+        return
+      }
+      this.friendUnreadCounts = await buildFriendUnreadCounts(
+        this.userId,
+        this.friends,
+        (friendId, viewerId) => getUserDiaries(friendId, viewerId)
+      )
+    },
+
+    updateFriendUnreadCountFromList (friendId, diaries) {
+      if (!friendId) return
+      const count = countNewFriendDiaryItems(diaries, this.userId, friendId)
+      this.friendUnreadCounts = { ...this.friendUnreadCounts, [friendId]: count }
     },
 
     formatRegionAddressLabel,
@@ -518,54 +549,40 @@ export default {
     },
 
     onDiariesClosed () {
-
-      if (this.selectedFriend) {
-        this.markFriendDiariesSeen(this.selectedFriend)
-        this.refreshFriends()
-      }
-
+      this.refreshFriends()
       this.selectedFriend = null
-
       this.friendDiaries = []
-
       this.diariesLoading = false
-
-      this.diarySeenBeforeOpen = 0
-
     },
 
     isNewFriendDiaryItem (diary) {
-      return checkNewFriendDiaryItem(diary?.createTime, this.diarySeenBeforeOpen)
+      if (!this.selectedFriend?.id) return false
+      return checkNewFriendDiaryItem(diary, this.userId, this.selectedFriend.id)
     },
 
-    markFriendDiariesSeen (f) {
-      if (!f?.id) return
-      let seenAt = f.latestDiaryTime
-      if (this.friendDiaries?.length) {
-        for (const d of this.friendDiaries) {
-          if (!d.createTime) continue
-          const t = new Date(d.createTime).getTime()
-          if (!seenAt || t > new Date(seenAt).getTime()) {
-            seenAt = d.createTime
-          }
-        }
-      }
-      if (seenAt) {
-        markFriendDiarySeen(this.userId, f.id, seenAt)
-      }
+    markFriendDiaryItemRead (diary) {
+      if (!diary?.id || !this.selectedFriend?.id) return
+      markFriendDiaryItemSeen(
+        this.userId,
+        this.selectedFriend.id,
+        diary.id,
+        this.friendDiaries
+      )
+      this.updateFriendUnreadCountFromList(this.selectedFriend.id, this.friendDiaries)
     },
 
     viewFriendDiary (diary) {
 
       if (!diary?.id) return
 
-      if (this.selectedFriend) {
-        this.markFriendDiariesSeen(this.selectedFriend)
-      }
+      this.markFriendDiaryItemRead(diary)
 
       this.diariesVisible = false
 
-      this.$router.push(`/diary-circle/${diary.id}`)
+      this.$router.push({
+        path: `/diary-circle/${diary.id}`,
+        query: { from: 'friends' }
+      })
 
     },
 
@@ -574,8 +591,6 @@ export default {
       if (!f?.id) return
 
       this.selectedFriend = f
-
-      this.diarySeenBeforeOpen = getFriendDiarySeenAt(this.userId, f.id)
 
       this.diariesVisible = true
 
@@ -590,6 +605,7 @@ export default {
         if (res && res.success) {
 
           this.friendDiaries = res.data || []
+          this.updateFriendUnreadCountFromList(f.id, this.friendDiaries)
 
         } else {
 
@@ -621,9 +637,12 @@ export default {
 
         const res = await listFriends(this.userId)
 
-        if (res && res.success) this.friends = res.data || []
-
-        else ElMessage.error(res?.message || '加载好友失败')
+        if (res && res.success) {
+          this.friends = res.data || []
+          await this.refreshFriendUnreadCounts()
+        } else {
+          ElMessage.error(res?.message || '加载好友失败')
+        }
 
       } catch (e) {
 

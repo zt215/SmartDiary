@@ -221,7 +221,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { getDiariesByUserId, searchDiaries, createDiary, deleteDiary } from '../api/diary';
 import { updateTheme } from '../api/auth';
 import { listIncomingFriendRequests, listFriends } from '../api/friend';
-import { countFriendsWithNewDiary } from '@/utils/friendDiarySeen';
+import { buildFriendUnreadCounts, sumFriendUnreadCounts } from '@/utils/friendDiarySeen';
+import { getUserDiaries } from '@/api/diaryCircle';
 
 export default {
   name: 'HomeView',
@@ -711,7 +712,12 @@ export default {
       try {
         const res = await listFriends(this.currentUserId)
         if (res && res.success) {
-          this.newFriendDiaryCount = countFriendsWithNewDiary(this.currentUserId, res.data || [])
+          const counts = await buildFriendUnreadCounts(
+            this.currentUserId,
+            res.data || [],
+            (friendId, viewerId) => getUserDiaries(friendId, viewerId)
+          )
+          this.newFriendDiaryCount = sumFriendUnreadCounts(counts)
         }
       } catch (e) {
         console.error('加载好友新字迹提醒失败:', e)

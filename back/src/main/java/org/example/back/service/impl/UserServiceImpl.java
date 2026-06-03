@@ -26,6 +26,8 @@ public class UserServiceImpl implements UserService {
     private static final long UID_START = 10_000_000L;
     private static final java.util.regex.Pattern EMAIL_PATTERN =
             java.util.regex.Pattern.compile("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
+    private static final java.util.regex.Pattern PASSWORD_PATTERN =
+            java.util.regex.Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*#?&]{8,}$");
 
     // MD5加密方法
     private String md5(String str) {
@@ -291,6 +293,72 @@ public class UserServiceImpl implements UserService {
         return result;
     }
     
+    private String validateNewPassword(String newPassword) {
+        if (!StringUtils.hasText(newPassword)) {
+            return "新密码不能为空";
+        }
+        if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
+            return "密码至少8位，且必须包含字母和数字";
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> changePassword(Integer userId, String oldPassword, String newPassword) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            if (userId == null) {
+                result.put("success", false);
+                result.put("message", "用户ID不能为空");
+                return result;
+            }
+            if (!StringUtils.hasText(oldPassword)) {
+                result.put("success", false);
+                result.put("message", "请输入当前密码");
+                return result;
+            }
+            String passwordError = validateNewPassword(newPassword);
+            if (passwordError != null) {
+                result.put("success", false);
+                result.put("message", passwordError);
+                return result;
+            }
+            if (oldPassword.equals(newPassword)) {
+                result.put("success", false);
+                result.put("message", "新密码不能与当前密码相同");
+                return result;
+            }
+
+            User user = userMapper.findById(userId);
+            if (user == null) {
+                result.put("success", false);
+                result.put("message", "用户不存在");
+                return result;
+            }
+            if (!user.getPassword().equals(md5(oldPassword))) {
+                result.put("success", false);
+                result.put("message", "当前密码错误");
+                return result;
+            }
+
+            user.setPassword(md5(newPassword));
+            int rowsAffected = userMapper.update(user);
+            if (rowsAffected > 0) {
+                result.put("success", true);
+                result.put("message", "密码修改成功");
+            } else {
+                result.put("success", false);
+                result.put("message", "密码修改失败");
+            }
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "密码修改异常: " + e.getMessage());
+        }
+
+        return result;
+    }
+
     @Override
     public Map<String, Object> updateUser(User user) {
         Map<String, Object> result = new HashMap<>();
