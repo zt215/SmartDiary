@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.back.mapper.FriendMapper">
+
+    <resultMap id="FriendRequestMap" type="org.example.back.pojo.FriendRequest">
+        <id property="id" column="id"/>
+        <result property="fromUserId" column="from_user_id"/>
+        <result property="toUserId" column="to_user_id"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="FriendUserBriefMap" type="org.example.back.pojo.FriendUserBrief">
+        <id property="id" column="id"/>
+        <result property="requestId" column="requestId"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="avatar" column="avatar"/>
+        <result property="latestDiaryTime" column="latestDiaryTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="org.example.back.pojo.FriendRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO friend_request(from_user_id, to_user_id, status)
+        VALUES(#{fromUserId}, #{toUserId}, #{status})
+    </insert>
+
+    <select id="findById" resultMap="FriendRequestMap">
+        SELECT * FROM friend_request WHERE id = #{id}
+    </select>
+
+    <select id="findByFromAndTo" resultMap="FriendRequestMap">
+        SELECT * FROM friend_request
+        WHERE from_user_id = #{fromUserId} AND to_user_id = #{toUserId}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE friend_request SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="listIncomingPending" resultMap="FriendUserBriefMap">
+        SELECT fr.id AS requestId,
+               u.id AS id,
+               u.name AS name,
+               CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
+               u.avatar AS avatar
+        FROM friend_request fr
+        JOIN user u ON u.id = fr.from_user_id
+        WHERE fr.to_user_id = #{userId} AND fr.status = 0
+        ORDER BY fr.create_time DESC
+    </select>
+
+    <select id="listOutgoingPending" resultMap="FriendUserBriefMap">
+        SELECT fr.id AS requestId,
+               u.id AS id,
+               u.name AS name,
+               CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
+               u.avatar AS avatar
+        FROM friend_request fr
+        JOIN user u ON u.id = fr.to_user_id
+        WHERE fr.from_user_id = #{userId} AND fr.status = 0
+        ORDER BY fr.create_time DESC
+    </select>
+
+    <select id="listAcceptedFriends" resultMap="FriendUserBriefMap">
+        SELECT fr.id AS requestId,
+               CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END AS id,
+               u.name AS name,
+               CASE WHEN u.hide_phone = 1 THEN NULL ELSE u.phone END AS phone,
+               u.avatar AS avatar,
+               (SELECT MAX(dc.create_time)
+                FROM diary_circle dc
+                WHERE dc.user_id = CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END
+               ) AS latestDiaryTime
+        FROM friend_request fr
+        JOIN user u ON u.id = CASE WHEN fr.from_user_id = #{userId} THEN fr.to_user_id ELSE fr.from_user_id END
+        WHERE fr.status = 1 AND (fr.from_user_id = #{userId} OR fr.to_user_id = #{userId})
+        ORDER BY fr.update_time DESC
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM friend_request WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteAcceptedBetween">
+        DELETE FROM friend_request
+        WHERE status = 1
+          AND ((from_user_id = #{a} AND to_user_id = #{b}) OR (from_user_id = #{b} AND to_user_id = #{a}))
+    </delete>
+
+    <select id="countAcceptedBetweenUsers" resultType="int">
+        SELECT COUNT(1) FROM friend_request
+        WHERE status = 1
+          AND ((from_user_id = #{userId} AND to_user_id = #{friendUserId})
+            OR (from_user_id = #{friendUserId} AND to_user_id = #{userId}))
+    </select>
+
+</mapper>
