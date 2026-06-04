@@ -30,6 +30,9 @@ public class CommentServiceImpl implements CommentService {
                 comment.setLikeCount(saved.getLikeCount());
                 comment.setCreateTime(saved.getCreateTime());
                 comment.setUpdateTime(saved.getUpdateTime());
+                comment.setUserName(saved.getUserName());
+                comment.setUserAvatar(saved.getUserAvatar());
+                comment.setReplyToUserName(saved.getReplyToUserName());
             }
         }
         return rows;
@@ -43,6 +46,9 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public int deleteComment(Integer id) {
+        // 先删子回复及其点赞，再删本条评论
+        commentLikeMapper.deleteByParentCommentId(id);
+        commentMapper.deleteByParentId(id);
         commentLikeMapper.deleteByCommentId(id);
         return commentMapper.deleteById(id);
     }
@@ -55,12 +61,27 @@ public class CommentServiceImpl implements CommentService {
             if (comment.getParentId() == null) {
                 List<Comment> replies = commentMapper.selectByParentId(comment.getId());
                 comment.setReplies(replies);
+                setRepliesLikedStatus(replies, null);
             }
         }
 
         return comments.stream()
                 .filter(c -> c.getParentId() == null)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    private void setRepliesLikedStatus(List<Comment> replies, Integer currentUserId) {
+        if (replies == null) {
+            return;
+        }
+        for (Comment reply : replies) {
+            if (currentUserId != null) {
+                CommentLike likeRecord = commentLikeMapper.selectByCommentIdAndUserId(reply.getId(), currentUserId);
+                reply.setIsLiked(likeRecord != null);
+            } else {
+                reply.setIsLiked(false);
+            }
+        }
     }
 
     @Override
@@ -100,6 +121,7 @@ public class CommentServiceImpl implements CommentService {
                 } else {
                     comment.setIsLiked(false);
                 }
+                setRepliesLikedStatus(replies, currentUserId);
             }
         }
 

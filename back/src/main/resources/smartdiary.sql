@@ -27,12 +27,14 @@ CREATE TABLE `comment`  (
   `user_id` int NOT NULL COMMENT '用户 ID',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '评论内容',
   `parent_id` int NULL DEFAULT NULL COMMENT '父评论 ID（用于回复）',
+  `reply_to_user_id` int NULL DEFAULT NULL COMMENT '被回复用户 ID',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_circle_id`(`circle_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE
+  INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE,
+  INDEX `idx_reply_to_user_id`(`reply_to_user_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -102,6 +104,21 @@ INSERT INTO `diary` VALUES (17, 3, '4', '<p>5</p>', '2026-03-19 12:00:00', '2026
 INSERT INTO `diary` VALUES (18, 3, '5', '<p>5</p>', '2026-03-19 12:00:00', '2026-03-19 14:43:47');
 INSERT INTO `diary` VALUES (19, 3, '6', '<p>6</p>', '2026-03-19 12:00:00', '2026-03-19 14:43:50');
 INSERT INTO `diary` VALUES (20, 5, 'sqwdefsgrtfh', '<p>eawrsdtgyukhgthgxdfze\'g\'w\'r\'g\'h\'de\'te\'y\'r</p>', '2026-05-25 12:00:00', '2026-05-25 17:01:03');
+
+-- ----------------------------
+-- Table structure for diary_draft
+-- ----------------------------
+DROP TABLE IF EXISTS `diary_draft`;
+CREATE TABLE `diary_draft`  (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '草稿ID',
+  `user_id` int NOT NULL COMMENT '用户ID',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '' COMMENT '标题',
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '内容',
+  `diary_date` date NULL DEFAULT NULL COMMENT '用户选择的日记日期',
+  `update_time` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '日记草稿表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for diary_circle

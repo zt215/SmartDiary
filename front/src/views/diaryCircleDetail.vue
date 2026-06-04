@@ -26,7 +26,7 @@
           <img :src="diary.userAvatar" :alt="diary.userName" class="publisher-avatar" />
           <div class="publisher-details">
             <span class="publisher-name">{{ diary.userName }}</span>
-            <span class="publish-time">{{ formatTime(diary.createTime) }}</span>
+            <span class="publish-time">{{ formatDateTime(diary.createTime) }}</span>
           </div>
         </div>
 
@@ -35,8 +35,12 @@
 
         <!-- 统计信息 -->
         <div class="diary-stats">
-          <span class="stat-item" @click="toggleDiaryLike" style="cursor: pointer;">
-            <i class="icon-like"></i> {{ diary.likeCount || 0 }} 点赞
+          <span
+            class="stat-item stat-like"
+            :class="{ active: diary.isLiked }"
+            @click="toggleDiaryLike"
+          >
+            <i class="icon-like"></i> {{ diary.likeCount || 0 }} {{ diary.isLiked ? '已赞' : '点赞' }}
           </span>
           <span class="stat-item">
             <i class="icon-comment"></i> {{ totalCommentCount }} 评论
@@ -57,63 +61,73 @@
               :key="comment.id" 
               class="comment-item"
             >
-              <div class="comment-header-row">
-                <img :src="comment.userAvatar" :alt="comment.userName" class="comment-avatar" />
-                <div class="comment-user-info">
-                  <span class="comment-user-name">{{ comment.userName }}</span>
-                  <span class="comment-time">{{ formatCommentTime(comment.createTime) }}</span>
-                </div>
-              </div>
-              <div
-                class="comment-content"
-                :class="{ 'is-replyable': canReplyTo(comment) }"
-                @click="onCommentBodyClick(comment)"
-              >
-                {{ comment.content }}
-              </div>
-              <div class="comment-footer">
-                <button class="comment-action-btn" @click.stop="likeComment(comment)">
-                  <i class="icon-like"></i> {{ comment.likeCount || 0 }}
-                </button>
-                <button
-                  v-if="canDeleteComment(comment)"
-                  class="comment-action-btn delete-btn"
-                  @click.stop="deleteComment(comment)"
-                >
-                  删除
-                </button>
-              </div>
-              
-              <!-- 回复列表 -->
-              <div v-if="comment.replies && comment.replies.length > 0" class="reply-list">
-                <div 
-                  v-for="reply in getVisibleReplies(comment)" 
-                  :key="reply.id" 
-                  class="reply-item"
-                >
-                  <div class="reply-header-row">
-                    <img :src="reply.userAvatar" :alt="reply.userName" class="reply-avatar" />
-                    <div class="reply-user-info">
-                      <span class="reply-user-name">{{ reply.userName }}</span>
-                      <span class="reply-time">{{ formatCommentTime(reply.createTime) }}</span>
-                    </div>
+              <div class="comment-body">
+                <div class="comment-header-row">
+                  <img :src="comment.userAvatar" :alt="comment.userName" class="comment-avatar" />
+                  <div class="comment-user-info">
+                    <span class="comment-user-name">{{ comment.userName }}</span>
+                    <span class="comment-time">{{ formatCommentTime(comment.createTime) }}</span>
                   </div>
-                  <div
-                    class="reply-content"
-                    :class="{ 'is-replyable': canReplyTo(reply) }"
-                    @click="onReplyBodyClick(comment, reply)"
+                </div>
+                <div
+                  class="comment-content"
+                  :class="{ 'is-replyable': canReplyTo(comment) }"
+                  @click="onCommentBodyClick(comment)"
+                >
+                  {{ comment.content }}
+                </div>
+                <div v-if="canDeleteComment(comment)" class="comment-meta-actions">
+                  <button
+                    class="comment-action-btn delete-btn"
+                    @click.stop="deleteComment(comment)"
                   >
-                    {{ reply.content }}
-                  </div>
-                  <div v-if="canDeleteComment(reply)" class="reply-footer">
-                    <button
-                      class="comment-action-btn delete-btn"
-                      @click.stop="deleteComment(reply)"
-                    >
-                      删除
-                    </button>
-                  </div>
+                    删除
+                  </button>
                 </div>
+
+                <!-- 回复列表 -->
+                <div v-if="comment.replies && comment.replies.length > 0" class="reply-list">
+                  <div 
+                    v-for="reply in getVisibleReplies(comment)" 
+                    :key="reply.id" 
+                    class="reply-item"
+                  >
+                    <div class="reply-body">
+                      <div class="reply-header-row">
+                        <img :src="reply.userAvatar" :alt="reply.userName" class="reply-avatar" />
+                        <div class="reply-user-info">
+                          <div class="reply-user-line">
+                            <span class="reply-user-name">{{ reply.userName }}</span>
+                            <template v-if="getReplyToUserName(reply, comment)">
+                              <span class="reply-relation-text">回复</span>
+                              <span class="reply-to-user-name">@{{ getReplyToUserName(reply, comment) }}</span>
+                            </template>
+                          </div>
+                          <span class="reply-time">{{ formatCommentTime(reply.createTime) }}</span>
+                        </div>
+                      </div>
+                      <div
+                        class="reply-content"
+                        :class="{ 'is-replyable': canReplyTo(reply) }"
+                        @click="onReplyBodyClick(comment, reply)"
+                      >
+                        {{ reply.content }}
+                      </div>
+                      <div v-if="canDeleteComment(reply)" class="comment-meta-actions">
+                        <button
+                          class="comment-action-btn delete-btn"
+                          @click.stop="deleteComment(reply)"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                    <CommentLikeButton
+                      :is-liked="!!reply.isLiked"
+                      :count="reply.likeCount || 0"
+                      @toggle="likeComment(reply)"
+                    />
+                  </div>
                 <button
                   v-if="hiddenReplyCount(comment) > 0"
                   type="button"
@@ -130,7 +144,13 @@
                 >
                   收起回复
                 </button>
+                </div>
               </div>
+              <CommentLikeButton
+                :is-liked="!!comment.isLiked"
+                :count="comment.likeCount || 0"
+                @toggle="likeComment(comment)"
+              />
             </div>
             
             <!-- 空状态 -->
@@ -170,10 +190,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getDiaryCircleById, toggleLike, deleteDiaryCircle } from '../api/diaryCircle'
 import { getComments, addComment, toggleCommentLike, deleteComment as deleteCommentApi } from '../api/comment'
-import { useCommentReplies, REPLY_VISIBLE_LIMIT } from '../composables/useCommentReplies'
+import { useCommentReplies, REPLY_VISIBLE_LIMIT, getReplyToUserName } from '../composables/useCommentReplies'
+import CommentLikeButton from '../components/CommentLikeButton.vue'
+import { formatDateTime, formatCommentTime } from '../utils/dateFormat'
 
 export default {
   name: 'DiaryCircleDetailView',
+  components: { CommentLikeButton },
   setup() {
     const router = useRouter()
     const route = useRoute()
@@ -195,6 +218,7 @@ export default {
       createTime: null,
       likeCount: 0,
       commentCount: 0,
+      isLiked: false,
       userName: '',
       userAvatar: ''
     })
@@ -260,7 +284,7 @@ export default {
       try {
         const user = getUserInfo()
         currentUserId.value = user?.id || null
-        const res = await getDiaryCircleById(circleId)
+        const res = await getDiaryCircleById(circleId, currentUserId.value)
         if (res && res.success) {
           diary.value = res.data
           isDiaryOwner.value = !!(currentUserId.value && diary.value.userId === currentUserId.value)
@@ -310,7 +334,8 @@ export default {
           circleId: diary.value.id,
           userId: user.id,
           content: newComment.value,
-          parentId
+          parentId,
+          replyToUserId: replyTarget.value?.replyToUserId ?? null
         })
         
         if (res && res.success) {
@@ -417,34 +442,6 @@ export default {
       }).catch(() => {})
     }
 
-    // 格式化时间
-    const formatTime = (time) => {
-      if (!time) return ''
-      if (typeof time === 'string') return time
-      const date = new Date(time)
-      return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-
-    // 格式化评论时间
-    const formatCommentTime = (time) => {
-      if (!time) return ''
-      if (typeof time === 'string') return time
-      const date = new Date(time)
-      const now = new Date()
-      const diff = now - date
-      
-      if (diff < 60000) return '刚刚'
-      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-      return date.toLocaleDateString('zh-CN')
-    }
-
     // 返回
     const goBack = () => {
       goBackToList()
@@ -489,6 +486,7 @@ export default {
       collapseReplies,
       onCommentBodyClick,
       onReplyBodyClick,
+      getReplyToUserName,
       REPLY_VISIBLE_LIMIT,
       submitComment,
       likeComment,
@@ -497,7 +495,7 @@ export default {
       deleteComment,
       isDiaryOwner,
       deleteDiary,
-      formatTime,
+      formatDateTime,
       formatCommentTime,
       goBack,
       backText
@@ -686,6 +684,24 @@ export default {
   font-size: 0.9rem;
 }
 
+.stat-like {
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  background-color: var(--hover-bg);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.stat-like:hover {
+  opacity: 1;
+}
+
+.stat-like.active {
+  background-color: var(--calendar-event-bg);
+  color: #fff;
+  opacity: 1;
+}
+
 .icon-like,
 .icon-comment {
   font-style: normal;
@@ -723,12 +739,26 @@ export default {
 }
 
 .comment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .comment-item:last-child {
   border-bottom: none;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-meta-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .comment-header-row,
@@ -760,6 +790,26 @@ export default {
   font-size: 14px;
 }
 
+.reply-user-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.reply-relation-text {
+  font-size: 13px;
+  color: var(--text-color);
+  opacity: 0.55;
+  font-weight: normal;
+}
+
+.reply-to-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--calendar-today-bg);
+}
+
 .comment-time,
 .reply-time {
   font-size: 12px;
@@ -789,9 +839,17 @@ export default {
   background-color: var(--hover-bg);
 }
 
-.reply-footer {
+.reply-item {
   display: flex;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.reply-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .reply-toggle-btn {
@@ -840,11 +898,6 @@ export default {
   text-decoration: underline;
 }
 
-.comment-footer {
-  display: flex;
-  gap: 1rem;
-}
-
 .comment-action-btn {
   padding: 0.25rem 0.75rem;
   background-color: var(--hover-bg);
@@ -877,11 +930,6 @@ export default {
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid var(--border-color);
-}
-
-.reply-item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .reply-item:last-child {

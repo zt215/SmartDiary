@@ -257,6 +257,7 @@ import {
   cascaderValueToStorage,
   isStoredRegionCodes
 } from '../utils/regionAddress'
+import { formatDateOnly } from '../utils/dateFormat'
 
 export default {
   name: 'SettingsView',
@@ -333,14 +334,7 @@ export default {
       }
     }
 
-    // 格式化日期
-    const formatDate = (date) => {
-      if (!date) return ''
-      if (typeof date === 'string') {
-        date = new Date(date)
-      }
-      return date.toLocaleDateString('zh-CN')
-    }
+    const formatDate = formatDateOnly
 
     // 进入编辑模式
     const enterEditMode = () => {

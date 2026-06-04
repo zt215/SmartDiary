@@ -325,6 +325,7 @@ import {
   buildFriendUnreadCounts
 } from '@/utils/friendDiarySeen'
 import { formatRegionAddressLabel } from '@/utils/regionAddress'
+import { formatDateTime, formatDateOnly } from '@/utils/dateFormat'
 
 
 
@@ -478,10 +479,7 @@ export default {
     formatRegionAddressLabel,
 
     formatDate (date) {
-      if (!date) return ''
-      const d = typeof date === 'string' ? new Date(date) : date
-      if (Number.isNaN(d.getTime())) return ''
-      return d.toLocaleDateString('zh-CN')
+      return formatDateOnly(date)
     },
 
     formatPrivateField (value, label) {
@@ -521,15 +519,7 @@ export default {
     },
 
     formatDiaryTime (time) {
-
-      if (!time) return ''
-
-      const d = typeof time === 'string' ? new Date(time) : time
-
-      if (Number.isNaN(d.getTime())) return String(time)
-
-      return d.toLocaleString('zh-CN')
-
+      return formatDateTime(time)
     },
 
     goBack () {

@@ -70,3 +70,28 @@ export function searchDiaries(userId, keyword) {
     }
   })
 }
+
+// 获取日记草稿
+export function getDiaryDraft(userId) {
+  return service({
+    url: `/diary/draft/${userId}`,
+    method: 'get'
+  })
+}
+
+// 保存日记草稿（每用户一条，自动 upsert）
+export function saveDiaryDraft(data) {
+  return service({
+    url: '/diary/draft',
+    method: 'put',
+    data
+  })
+}
+
+// 删除日记草稿
+export function deleteDiaryDraft(userId) {
+  return service({
+    url: `/diary/draft/${userId}`,
+    method: 'delete'
+  })
+}

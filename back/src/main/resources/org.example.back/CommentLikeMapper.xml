@@ -26,6 +26,12 @@
         WHERE comment_id = #{commentId}
     </delete>
 
+    <delete id="deleteByParentCommentId">
+        DELETE cl FROM comment_like cl
+        INNER JOIN comment c ON cl.comment_id = c.id
+        WHERE c.parent_id = #{parentId}
+    </delete>
+
     <delete id="deleteByCircleId">
         DELETE cl FROM comment_like cl
         INNER JOIN comment c ON cl.comment_id = c.id

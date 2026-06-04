@@ -14,6 +14,8 @@ public interface DiaryCircleService {
 
     DiaryCircle getById(Integer id);
 
+    DiaryCircle getByIdWithLikeStatus(Integer id, Integer currentUserId);
+
     List<DiaryCircle> getByUserId(Integer userId);
 
     boolean toggleLike(Integer id, boolean isLike, Integer userId);

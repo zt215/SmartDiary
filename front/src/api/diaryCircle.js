@@ -17,8 +17,12 @@ export function getDiaryCircleList(page = 1, pageSize = 10, userId = null, filte
 /**
  * 根据 ID 获取动态详情
  */
-export function getDiaryCircleById(id) {
-  return axios.get(`${BASE_URL}/${id}`)
+export function getDiaryCircleById(id, userId = null) {
+  const params = {}
+  if (userId !== null && userId !== undefined) {
+    params.userId = userId
+  }
+  return axios.get(`${BASE_URL}/${id}`, { params })
     .then(res => res.data)
 }
 

@@ -11,6 +11,7 @@
         <h2 class="editor-title">新建日记</h2>
       </div>
       <div class="header-right">
+        <span v-if="draftHint" class="draft-hint">{{ draftHint }}</span>
         <el-button @click="saveDraft" :loading="saving">保存草稿</el-button>
         <el-button type="primary" @click="saveDiary" :loading="saving">保存</el-button>
       </div>
@@ -53,13 +54,14 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
 import { createDiary } from '../api/diary'
 import { createQuillModules } from '../utils/richContent'
+import { loadDiaryDraft, saveDiaryDraft, clearDiaryDraft } from '../utils/diaryDraft'
 
 export default {
   name: 'NewDiaryView',
@@ -91,9 +93,67 @@ export default {
     const todayStr = formatLocalYYYYMMDD(new Date())
     const isTodayDiary = computed(() => diaryForm.value.date === todayStr)
     const saving = ref(false)
+    const draftHint = ref('')
+    /**
+     * 草稿策略：
+     * - 返回 / 离开页面 / 点「保存草稿」/ 编辑时自动保存 → 写入 diary_draft 表
+     * - 点「保存」正式发布 → 写入 diary 表并删除 diary_draft
+     */
+    const skipDraftPersist = ref(false)
+
+    const getUserId = () => {
+      const userStr = localStorage.getItem('userInfo')
+      if (!userStr) return null
+      try {
+        return JSON.parse(userStr).id ?? null
+      } catch {
+        return null
+      }
+    }
+
+    const syncFromEditor = () => {
+      if (quillEditor.value) {
+        diaryForm.value.content = quillEditor.value.root.innerHTML
+      }
+    }
+
+    let autoSaveTimer = null
+    const persistDraft = async (silent = true) => {
+      if (skipDraftPersist.value) return false
+      const userId = getUserId()
+      if (!userId) {
+        if (!silent) ElMessage.warning('请先登录后再保存草稿')
+        return false
+      }
+      syncFromEditor()
+      try {
+        const ok = await saveDiaryDraft(userId, {
+          title: diaryForm.value.title,
+          content: diaryForm.value.content,
+          date: diaryForm.value.date
+        })
+        if (ok && silent) {
+          draftHint.value = '草稿已自动保存'
+        } else if (!ok) {
+          draftHint.value = ''
+        }
+        return ok
+      } catch {
+        if (!silent) ElMessage.error('草稿保存失败，请检查网络')
+        return false
+      }
+    }
+
+    const scheduleAutoSave = () => {
+      if (skipDraftPersist.value) return
+      clearTimeout(autoSaveTimer)
+      autoSaveTimer = setTimeout(() => {
+        void persistDraft(true)
+      }, 1200)
+    }
 
     // 初始化编辑器
-    onMounted(() => {
+    onMounted(async () => {
       if (editorContainer.value) {
         quillEditor.value = new Quill(editorContainer.value, {
           theme: 'snow',
@@ -101,52 +161,58 @@ export default {
           modules: createQuillModules((msg) => ElMessage.warning(msg))
         })
 
-        // 监听内容变化
         quillEditor.value.on('text-change', () => {
           diaryForm.value.content = quillEditor.value.root.innerHTML
+          scheduleAutoSave()
         })
 
-        // 从localStorage恢复草稿（可选）
-        const draft = localStorage.getItem('diaryDraft')
-        if (draft) {
-          try {
-            const draftData = JSON.parse(draft)
+        const userId = getUserId()
+        if (userId) {
+          const draftData = await loadDiaryDraft(userId)
+          if (draftData) {
             diaryForm.value.title = draftData.title || ''
-            // 如果有路由携带日期，则优先使用该日期；否则使用草稿日期
-            if (!hasQDate) {
-              diaryForm.value.date = draftData.date || new Date().toISOString().slice(0, 10)
+            if (!hasQDate && draftData.date) {
+              diaryForm.value.date = draftData.date
             }
             if (draftData.content) {
               quillEditor.value.root.innerHTML = draftData.content
+              diaryForm.value.content = draftData.content
             }
-          } catch (e) {
-            console.error('恢复草稿失败:', e)
+            draftHint.value = '已恢复上次草稿'
           }
         }
       }
     })
 
-    // 清理
+    watch(
+      () => [diaryForm.value.title, diaryForm.value.date],
+      () => scheduleAutoSave()
+    )
+
     onBeforeUnmount(() => {
+      clearTimeout(autoSaveTimer)
+      if (!skipDraftPersist.value) {
+        void persistDraft(true)
+      }
       if (quillEditor.value) {
         quillEditor.value = null
       }
     })
 
-    // 返回
-    const goBack = () => {
+    const goBack = async () => {
+      await persistDraft(true)
       router.back()
     }
 
-    // 保存草稿
-    const saveDraft = () => {
-      const draftData = {
-        title: diaryForm.value.title,
-        content: diaryForm.value.content,
-        date: diaryForm.value.date
+    const saveDraft = async () => {
+      if (await persistDraft(false)) {
+        skipDraftPersist.value = true
+        clearTimeout(autoSaveTimer)
+        ElMessage.success('草稿已保存，下次可继续编辑')
+        router.back()
+      } else {
+        ElMessage.warning('请先输入标题或内容')
       }
-      localStorage.setItem('diaryDraft', JSON.stringify(draftData))
-      ElMessage.success('草稿已保存')
     }
 
     const backToToday = () => {
@@ -205,8 +271,9 @@ export default {
 
         if (res && res.success) {
           ElMessage.success('日记保存成功')
-          // 清除草稿
-          localStorage.removeItem('diaryDraft')
+          skipDraftPersist.value = true
+          clearTimeout(autoSaveTimer)
+          await clearDiaryDraft(user.id)
           // 返回首页
           router.push('/home')
         } else {
@@ -224,6 +291,7 @@ export default {
       editorContainer,
       diaryForm,
       saving,
+      draftHint,
       goBack,
       saveDraft,
       saveDiary,
@@ -257,6 +325,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.draft-hint {
+  font-size: 12px;
+  color: #888;
+  max-width: 140px;
+  text-align: right;
 }
 
 .header-center {

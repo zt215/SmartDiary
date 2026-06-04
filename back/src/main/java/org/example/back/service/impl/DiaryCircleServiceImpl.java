@@ -65,6 +65,21 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
     }
 
     @Override
+    public DiaryCircle getByIdWithLikeStatus(Integer id, Integer currentUserId) {
+        DiaryCircle diaryCircle = diaryCircleMapper.selectById(id);
+        if (diaryCircle == null) {
+            return null;
+        }
+        if (currentUserId != null) {
+            DiaryCircleLike likeRecord = diaryCircleLikeMapper.selectByDiaryCircleIdAndUserId(id, currentUserId);
+            diaryCircle.setIsLiked(likeRecord != null);
+        } else {
+            diaryCircle.setIsLiked(false);
+        }
+        return diaryCircle;
+    }
+
+    @Override
     public List<DiaryCircle> getByUserId(Integer userId) {
         return diaryCircleMapper.selectByUserId(userId);
     }

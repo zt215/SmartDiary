@@ -14,6 +14,7 @@ public class Comment {
     private Integer userId; // 用户 ID
     private String content; // 评论内容
     private Integer parentId; // 父评论 ID（用于回复）
+    private Integer replyToUserId; // 被回复用户 ID
     private Integer likeCount; // 点赞数
     private Date createTime; // 创建时间
     private Date updateTime; // 更新时间
@@ -21,6 +22,7 @@ public class Comment {
     // 关联用户信息（非数据库字段）
     private String userName; // 用户名
     private String userAvatar; // 用户头像
+    private String replyToUserName; // 被回复用户名（非数据库字段）
     
     // 当前用户是否已点赞（非数据库字段）
     @JsonProperty("isLiked")

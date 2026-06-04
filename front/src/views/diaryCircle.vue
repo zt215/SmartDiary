@@ -49,7 +49,7 @@
             <img :src="diary.userAvatar" :alt="diary.userName" class="diary-user-avatar" />
             <div class="diary-user-info">
               <span class="diary-user-name">{{ diary.userName }}</span>
-              <span class="diary-time">{{ diary.createTime }}</span>
+              <span class="diary-time">{{ formatDateTime(diary.createTime) }}</span>
             </div>
           </div>
           <div class="diary-content">
@@ -178,6 +178,7 @@ import {
   stripHtml,
   createQuillModules
 } from '../utils/richContent';
+import { formatDateTime, formatDateOnly, toDateKey } from '../utils/dateFormat';
 
 export default {
   name: 'DiaryCircle',
@@ -329,13 +330,7 @@ export default {
       this.pickerKeyword = ''
     },
     getDiaryDateKey (time) {
-      if (!time) return ''
-      const d = typeof time === 'string' ? new Date(time) : time
-      if (Number.isNaN(d.getTime())) return ''
-      const y = d.getFullYear()
-      const m = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${y}-${m}-${day}`
+      return toDateKey(time)
     },
     getPublishContent () {
       if (this.publishQuill) {
@@ -353,10 +348,9 @@ export default {
     hasRichTextContent,
     getCircleListPreview,
     formatPickerDate (time) {
-      if (!time) return ''
-      const d = typeof time === 'string' ? new Date(time) : time
-      return d.toLocaleDateString('zh-CN')
+      return formatDateOnly(time)
     },
+    formatDateTime,
     async selectFromDiaries () {
       if (!this.user?.id) {
         ElMessage.error('请先登录')

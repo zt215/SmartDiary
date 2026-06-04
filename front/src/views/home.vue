@@ -188,11 +188,11 @@
           </div>
           <div class="stat-item" v-if="statistics.earliestDate">
             <span class="stat-label">最早日记：</span>
-            <span class="stat-value">{{ formatDate(statistics.earliestDate) }}</span>
+            <span class="stat-value">{{ formatStatDate(statistics.earliestDate) }}</span>
           </div>
           <div class="stat-item" v-if="statistics.latestDate">
             <span class="stat-label">最近日记：</span>
-            <span class="stat-value">{{ formatDate(statistics.latestDate) }}</span>
+            <span class="stat-value">{{ formatStatDate(statistics.latestDate) }}</span>
           </div>
           <div class="monthly-stats" v-if="statistics.monthlyCounts.length > 0">
             <h4>各月份统计</h4>
@@ -223,6 +223,7 @@ import { updateTheme } from '../api/auth';
 import { listIncomingFriendRequests, listFriends } from '../api/friend';
 import { buildFriendUnreadCounts, sumFriendUnreadCounts } from '@/utils/friendDiarySeen';
 import { getUserDiaries } from '@/api/diaryCircle';
+import { formatDateTime, formatDateOnly } from '@/utils/dateFormat';
 
 export default {
   name: 'HomeView',
@@ -484,10 +485,11 @@ export default {
     },
     formatDate(date) {
       if (!date) return '';
-      if (typeof date === 'string') {
-        date = new Date(date);
-      }
-      return date.toLocaleDateString('zh-CN');
+      return formatDateTime(date);
+    },
+    formatStatDate(date) {
+      if (!date) return '';
+      return formatDateOnly(date);
     },
     stripHtml(html) {
       if (!html) return '';

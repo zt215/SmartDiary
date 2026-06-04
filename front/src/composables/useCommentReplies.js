@@ -3,6 +3,18 @@ import { ElMessage } from 'element-plus'
 
 export const REPLY_VISIBLE_LIMIT = 3
 
+/** 展示被回复者昵称（兼容旧数据无 replyToUserId 时回退为根评论作者） */
+export function getReplyToUserName(reply, rootComment) {
+  if (reply?.replyToUserName) return reply.replyToUserName
+  if (reply?.replyToUserId && rootComment) {
+    if (rootComment.userId === reply.replyToUserId) return rootComment.userName
+    const matched = (rootComment.replies || []).find((r) => r.userId === reply.replyToUserId)
+    if (matched?.userName) return matched.userName
+  }
+  if (reply?.parentId && rootComment?.userName) return rootComment.userName
+  return null
+}
+
 /**
  * 评论回复：点击他人评论进入回复态；回复超过 3 条折叠
  */
@@ -21,6 +33,7 @@ export function useCommentReplies(getCurrentUserId) {
     replyTarget.value = {
       parentId: rootComment.id,
       userName: user.userName,
+      replyToUserId: user.userId,
       rootComment
     }
   }
@@ -29,6 +42,7 @@ export function useCommentReplies(getCurrentUserId) {
     replyTarget.value = {
       parentId: rootComment.id,
       userName: reply.userName,
+      replyToUserId: reply.userId,
       rootComment
     }
   }
@@ -103,7 +117,14 @@ export function useCommentReplies(getCurrentUserId) {
 
     if (parentId && rootComment) {
       if (!rootComment.replies) rootComment.replies = []
-      rootComment.replies.push({ ...item, parentId })
+      const replyToUserId = replyTarget.value?.replyToUserId ?? null
+      const replyToUserName = replyTarget.value?.userName ?? null
+      rootComment.replies.push({
+        ...item,
+        parentId,
+        replyToUserId,
+        replyToUserName
+      })
       cancelReply()
       return 'reply'
     }
@@ -126,6 +147,7 @@ export function useCommentReplies(getCurrentUserId) {
   }
 
   return {
+    getReplyToUserName,
     replyTarget,
     canReplyTo,
     startReply,

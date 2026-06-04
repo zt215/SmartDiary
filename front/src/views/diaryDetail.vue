@@ -30,9 +30,9 @@
         <div class="diary-header">
           <h1 class="diary-title">{{ diary.title || '无标题' }}</h1>
           <div class="diary-meta">
-            <span class="diary-date">{{ formatDate(diary.createTime) }}</span>
+            <span class="diary-date">{{ formatDateTime(diary.createTime) }}</span>
             <span v-if="diary.updateTime && diary.updateTime !== diary.createTime" class="diary-update-time">
-              更新于 {{ formatDate(diary.updateTime) }}
+              更新于 {{ formatDateTime(diary.updateTime) }}
             </span>
           </div>
         </div>
@@ -69,6 +69,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
 import { getDiaryById, updateDiary, deleteDiary as deleteDiaryApi } from '../api/diary'
+import { formatDateTime } from '../utils/dateFormat'
 import { createQuillModules } from '../utils/richContent'
 
 export default {
@@ -246,21 +247,6 @@ export default {
       }
     }
 
-    // 格式化日期
-    const formatDate = (date) => {
-      if (!date) return ''
-      if (typeof date === 'string') {
-        date = new Date(date)
-      }
-      return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }
-
     onMounted(() => {
       loadDiary()
     })
@@ -283,7 +269,7 @@ export default {
       saveDiary,
       deleteDiary,
       goBack,
-      formatDate
+      formatDateTime
     }
   }
 }

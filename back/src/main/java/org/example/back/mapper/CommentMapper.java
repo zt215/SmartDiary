@@ -13,6 +13,9 @@ public interface CommentMapper {
 
     int deleteById(@Param("id") Integer id);
 
+    /** 删除某条评论下的所有回复（parent_id = parentId） */
+    int deleteByParentId(@Param("parentId") Integer parentId);
+
     int deleteByCircleId(@Param("circleId") Integer circleId);
 
     Comment selectById(@Param("id") Integer id);

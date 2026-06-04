@@ -104,10 +104,12 @@ public class DiaryCircleController {
      * 根据 ID 查询动态
      */
     @GetMapping("/{id}")
-    public Map<String, Object> getById(@PathVariable("id") Integer id) {
+    public Map<String, Object> getById(
+            @PathVariable("id") Integer id,
+            @RequestParam(value = "userId", required = false) Integer userId) {
         Map<String, Object> result = new HashMap<>();
         try {
-            DiaryCircle diaryCircle = diaryCircleService.getById(id);
+            DiaryCircle diaryCircle = diaryCircleService.getByIdWithLikeStatus(id, userId);
             if (diaryCircle != null) {
                 result.put("success", true);
                 result.put("data", diaryCircle);

@@ -19,6 +19,9 @@ public interface CommentLikeMapper {
 
     int deleteByCommentId(@Param("commentId") Integer commentId);
 
+    /** 删除某父评论下所有回复的点赞记录 */
+    int deleteByParentCommentId(@Param("parentId") Integer parentId);
+
     int deleteByCircleId(@Param("circleId") Integer circleId);
 
     /**

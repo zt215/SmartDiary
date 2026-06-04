@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="56" viewBox="0 0 28 56">
+  <!-- 未点赞 -->
+  <g transform="translate(2,2)">
+    <path fill="none" stroke="#8c8c8c" stroke-width="1.8" stroke-linejoin="round" d="M12 22V10l-4-2-2 4-4 1v9l2 10h14l2-10V13l-4-1-2 3v7z"/>
+  </g>
+  <!-- 已点赞 -->
+  <g transform="translate(2,30)">
+    <path fill="#3d8be4" stroke="#2a6fc4" stroke-width="1" stroke-linejoin="round" d="M12 22V10l-4-2-2 4-4 1v9l2 10h14l2-10V13l-4-1-2 3v7z"/>
+  </g>
+</svg>

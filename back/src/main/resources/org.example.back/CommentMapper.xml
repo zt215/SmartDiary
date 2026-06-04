@@ -8,6 +8,8 @@
         <result property="userId" column="user_id"/>
         <result property="content" column="content"/>
         <result property="parentId" column="parent_id"/>
+        <result property="replyToUserId" column="reply_to_user_id"/>
+        <result property="replyToUserName" column="reply_to_user_name"/>
         <result property="likeCount" column="like_count"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
@@ -21,18 +23,23 @@
         c.user_id,
         c.content,
         c.parent_id,
+        c.reply_to_user_id,
         c.create_time,
         c.update_time,
         (SELECT COUNT(*) FROM comment_like cl WHERE cl.comment_id = c.id) AS like_count
     </sql>
 
     <insert id="insert" parameterType="org.example.back.pojo.Comment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO comment (circle_id, user_id, content, parent_id, create_time, update_time)
-        VALUES (#{circleId}, #{userId}, #{content}, #{parentId}, NOW(), NOW())
+        INSERT INTO comment (circle_id, user_id, content, parent_id, reply_to_user_id, create_time, update_time)
+        VALUES (#{circleId}, #{userId}, #{content}, #{parentId}, #{replyToUserId}, NOW(), NOW())
     </insert>
 
     <delete id="deleteById">
         DELETE FROM comment WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByParentId">
+        DELETE FROM comment WHERE parent_id = #{parentId}
     </delete>
 
     <delete id="deleteByCircleId">
@@ -43,9 +50,11 @@
         SELECT
         <include refid="CommentSelectColumns"/>,
         u.name,
-        u.avatar
+        u.avatar,
+        ru.name AS reply_to_user_name
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
+        LEFT JOIN user ru ON c.reply_to_user_id = ru.id
         WHERE c.id = #{id}
     </select>
 
@@ -53,9 +62,11 @@
         SELECT
         <include refid="CommentSelectColumns"/>,
         u.name,
-        u.avatar
+        u.avatar,
+        ru.name AS reply_to_user_name
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
+        LEFT JOIN user ru ON c.reply_to_user_id = ru.id
         WHERE c.circle_id = #{circleId}
         ORDER BY c.create_time ASC
     </select>
@@ -64,9 +75,11 @@
         SELECT
         <include refid="CommentSelectColumns"/>,
         u.name,
-        u.avatar
+        u.avatar,
+        ru.name AS reply_to_user_name
         FROM comment c
         LEFT JOIN user u ON c.user_id = u.id
+        LEFT JOIN user ru ON c.reply_to_user_id = ru.id
         WHERE c.parent_id = #{parentId}
         ORDER BY c.create_time ASC
     </select>
