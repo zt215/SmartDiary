@@ -1,5 +1,6 @@
 package org.example.back.mapper;
 
+import org.example.back.pojo.AdminUserRow;
 import org.example.back.pojo.User;
 import java.util.List;
 
@@ -46,4 +47,6 @@ public interface UserMapper {
     User findByEmail(String email);
 
     User findByUid(Long uid);
+
+    List<AdminUserRow> selectAllForAdmin();
 }

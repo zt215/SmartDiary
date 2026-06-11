@@ -24,4 +24,6 @@ public interface DiaryCircleMapper {
                                             @Param("userId") Integer userId);
 
     List<DiaryCircle> selectByUserId(@Param("userId") Integer userId);
+
+    int countAll();
 }

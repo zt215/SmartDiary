@@ -50,6 +50,10 @@
         WHERE dc.id = #{id}
     </select>
 
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM diary_circle
+    </select>
+
     <select id="selectAllWithUser" resultMap="DiaryCircleResultMap">
         SELECT
         <include refid="DiaryCircleSelectColumns"/>,

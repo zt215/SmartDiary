@@ -54,7 +54,21 @@ const router = createRouter({
       name: 'friends',
       component: () => import('@/views/friends.vue'),
     },
-    
+    {
+      path: '/enforcer/login',
+      name: 'enforcerLogin',
+      component: () => import('@/views/enforcer/login.vue'),
+    },
+    {
+      path: '/enforcer/forgotpassword',
+      name: 'enforcerForgotPassword',
+      component: () => import('@/views/enforcer/forgotpassword.vue'),
+    },
+    {
+      path: '/enforcer/home',
+      name: 'enforcerHome',
+      component: () => import('@/views/enforcer/home.vue'),
+    },
   ],
 })
 

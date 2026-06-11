@@ -1,0 +1,233 @@
+/* 登录/执法者登录共用布局（与 login.vue 视觉一致） */
+.auth-login-page {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.auth-login-page .video-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.auth-login-page .background-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.auth-login-page .video-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.auth-login-page .left {
+  width: 50%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.auth-login-page .left-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.auth-login-page .left-copy.show {
+  opacity: 1;
+}
+
+.auth-login-page .left .title {
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  font-size: 80px;
+  background: linear-gradient(90deg, #ff7e5f, #3a0885);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.auth-login-page .left .subtitle {
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  font-size: 80px;
+  background: linear-gradient(90deg, #3a0885, #fabcac);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 40px 0 0;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.auth-login-page .left .welcome {
+  font-size: 30px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  background: linear-gradient(90deg, #3d8be4, #fabcac);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  align-self: flex-end;
+  margin: 20px 10% 0 0;
+  width: max-content;
+  white-space: nowrap;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.auth-login-page .right {
+  width: 40%;
+  height: 100vh;
+  border-top-left-radius: 100px;
+  border-bottom-left-radius: 100px;
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  right: -80px;
+  opacity: 0;
+  transition: opacity 1s, right 1s;
+  z-index: 1;
+}
+
+.auth-login-page .right.show {
+  opacity: 1;
+  right: 0;
+}
+
+.auth-login-page .logo {
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  font-size: 72px;
+  background: linear-gradient(90deg, #ffffff, #d32ce6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  margin-top: 28%;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.auth-login-page .logo.logo-enforcer {
+  font-size: 64px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.auth-login-page .form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-login-page .field {
+  width: 60%;
+  margin-top: 20px;
+}
+
+.auth-login-page .field:first-of-type {
+  margin-top: 5%;
+}
+
+.auth-login-page .field .el-input__wrapper {
+  background: transparent !important;
+  border-radius: 10px;
+  border: 1px solid rgba(250, 188, 172, 0.85);
+  box-shadow: none;
+}
+
+.auth-login-page .field .el-input__wrapper.is-focus {
+  border-color: #d8a8ff;
+  box-shadow: 0 0 0 1px rgba(211, 44, 230, 0.35);
+}
+
+.auth-login-page .field .el-input__inner {
+  background: transparent;
+  color: #f8f0e8;
+}
+
+.auth-login-page .field .el-input__inner::placeholder {
+  color: rgba(220, 220, 220, 0.92);
+}
+
+.auth-login-page .submit-btn {
+  width: 60%;
+  margin-top: 36px;
+  height: 44px;
+  font-size: 18px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  letter-spacing: 0.15em;
+  --el-button-bg-color: transparent;
+  --el-button-border-color: rgba(250, 188, 172, 0.85);
+  --el-button-text-color: #f8f0e8;
+  --el-button-hover-bg-color: rgba(255, 255, 255, 0.08);
+  --el-button-hover-border-color: #d8a8ff;
+  --el-button-hover-text-color: #ffe8dc;
+  --el-button-active-bg-color: rgba(211, 44, 230, 0.12);
+  --el-button-active-border-color: #d8a8ff;
+  background: transparent !important;
+  border: 1px solid rgba(250, 188, 172, 0.85) !important;
+  color: #f8f0e8 !important;
+  box-shadow: none !important;
+  border-radius: 10px;
+  transition: border-color 0.25s, color 0.25s, background 0.25s;
+}
+
+.auth-login-page .submit-btn:hover,
+.auth-login-page .submit-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: #d8a8ff !important;
+  color: #ffe8dc !important;
+}
+
+.auth-login-page .submit-btn.is-loading {
+  background: transparent !important;
+}
+
+.auth-login-page .bottom {
+  display: flex;
+  align-items: center;
+  margin-top: 10%;
+  justify-content: space-between;
+  width: 60%;
+}
+
+.auth-login-page .bottom .el-button.is-link {
+  font-size: 18px;
+  color: #fabcac;
+}
+
+.auth-login-page .bottom .el-button.is-link:hover {
+  color: #ffe8dc;
+}
+
+@media (max-width: 768px) {
+  .auth-login-page .left,
+  .auth-login-page .right {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+  .auth-login-page .right {
+    border-radius: 50px;
+    margin: 20px;
+    right: 0;
+  }
+  .auth-login-page .left .title,
+  .auth-login-page .left .subtitle {
+    font-size: 40px;
+  }
+  .auth-login-page .logo {
+    font-size: 48px;
+    margin-top: 16%;
+  }
+}

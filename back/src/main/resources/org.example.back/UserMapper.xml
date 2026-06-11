@@ -79,4 +79,18 @@
         SELECT * FROM user WHERE uid = #{uid} LIMIT 1
     </select>
 
+    <resultMap id="AdminUserRowMap" type="org.example.back.pojo.AdminUserRow">
+        <result property="uid" column="uid"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="birthday" column="birthday"/>
+    </resultMap>
+
+    <select id="selectAllForAdmin" resultMap="AdminUserRowMap">
+        SELECT uid, name, phone, email, birthday
+        FROM user
+        ORDER BY uid ASC
+    </select>
+
 </mapper>

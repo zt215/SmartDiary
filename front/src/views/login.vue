@@ -213,6 +213,9 @@
         <el-button link @click="$router.push('/forgotpassword')">忘记密码</el-button>
         <el-button link @click="$router.push('/register')">注册</el-button>
       </div>
+      <div class="enforcer-entry">
+        <el-button link @click="$router.push('/enforcer/login')">前往执法堂>>>>>></el-button>
+      </div>
       </div>
     </div>
 
@@ -756,6 +759,20 @@ html.login-quill-transition body {
 .bottom :deep(.el-button.is-link:hover),
 .bottom :deep(.el-button.is-link:focus-visible) {
   color: #ffe8dc;
+}
+
+.enforcer-entry {
+  width: 60%;
+  margin: 12px auto 0;
+  text-align: center;
+}
+.enforcer-entry :deep(.el-button.is-link) {
+  font-size: 16px;
+  color: rgba(255, 230, 200, 0.95);
+  letter-spacing: 0.12em;
+}
+.enforcer-entry :deep(.el-button.is-link:hover) {
+  color: #fff;
 }
 
 /* 羽毛笔「开始跃迁」按钮 */
