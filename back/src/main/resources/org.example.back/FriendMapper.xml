@@ -97,4 +97,9 @@
             OR (from_user_id = #{friendUserId} AND to_user_id = #{userId}))
     </select>
 
+    <delete id="deleteByUserId">
+        DELETE FROM friend_request
+        WHERE from_user_id = #{userId} OR to_user_id = #{userId}
+    </delete>
+
 </mapper>

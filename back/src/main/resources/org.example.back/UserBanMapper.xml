@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.back.mapper.UserBanMapper">
+
+    <resultMap id="UserBanResultMap" type="org.example.back.pojo.UserBan">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="enforcerId" column="enforcer_id"/>
+        <result property="reason" column="reason"/>
+        <result property="customReason" column="custom_reason"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="org.example.back.pojo.UserBan" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_ban(user_id, enforcer_id, reason, custom_reason, start_time, end_time, create_time)
+        VALUES(#{userId}, #{enforcerId}, #{reason}, #{customReason}, #{startTime}, #{endTime}, #{createTime})
+    </insert>
+
+    <select id="findActiveByUserId" resultMap="UserBanResultMap">
+        SELECT * FROM user_ban
+        WHERE user_id = #{userId} AND end_time > NOW()
+        ORDER BY end_time DESC
+        LIMIT 1
+    </select>
+
+    <update id="deleteActiveByUserId">
+        UPDATE user_ban SET end_time = NOW()
+        WHERE user_id = #{userId} AND end_time > NOW()
+    </update>
+
+    <update id="updateEndTime">
+        UPDATE user_ban SET end_time = #{endTime}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

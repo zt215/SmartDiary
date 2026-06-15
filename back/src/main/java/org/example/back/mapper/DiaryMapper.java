@@ -1,5 +1,6 @@
 package org.example.back.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.example.back.pojo.Diary;
 import java.util.Date;
 import java.util.List;
@@ -40,4 +41,6 @@ public interface DiaryMapper {
      * 根据用户ID和关键词搜索日记
      */
     List<Diary> searchByKeyword(Integer userId, String keyword);
+
+    int deleteByUserId(@Param("userId") Integer userId);
 }

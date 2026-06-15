@@ -3,6 +3,14 @@
 body {
     margin: 0;
     padding: 0;
-    
     overflow: hidden;
+}
+
+body.el-popup-parent--hidden {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+
+.el-overlay {
+    position: fixed !important;
 }

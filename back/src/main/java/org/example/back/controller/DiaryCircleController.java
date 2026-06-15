@@ -3,6 +3,7 @@ package org.example.back.controller;
 import org.example.back.pojo.DiaryCircle;
 import org.example.back.service.DiaryCircleService;
 import org.example.back.service.FriendService;
+import org.example.back.service.UserBanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +22,18 @@ public class DiaryCircleController {
     @Autowired
     private FriendService friendService;
 
+    @Autowired
+    private UserBanService userBanService;
+
     /**
      * 发布新动态
      */
     @PostMapping("/publish")
     public Map<String, Object> publish(@RequestBody DiaryCircle diaryCircle) {
+        Map<String, Object> banBlock = userBanService.buildBanBlockResultIfBanned(diaryCircle.getUserId());
+        if (banBlock != null) {
+            return banBlock;
+        }
         Map<String, Object> result = new HashMap<>();
         try {
             int rows = diaryCircleService.publish(diaryCircle);
@@ -111,8 +119,14 @@ public class DiaryCircleController {
         try {
             DiaryCircle diaryCircle = diaryCircleService.getByIdWithLikeStatus(id, userId);
             if (diaryCircle != null) {
-                result.put("success", true);
-                result.put("data", diaryCircle);
+                if (userId != null && !userId.equals(diaryCircle.getUserId())
+                        && diaryCircle.getHidden() != null && diaryCircle.getHidden() == 1) {
+                    result.put("success", false);
+                    result.put("message", "动态不存在");
+                } else {
+                    result.put("success", true);
+                    result.put("data", diaryCircle);
+                }
             } else {
                 result.put("success", false);
                 result.put("message", "动态不存在");
@@ -139,6 +153,9 @@ public class DiaryCircleController {
                 return result;
             }
             List<DiaryCircle> list = diaryCircleService.getByUserId(userId);
+            if (viewerId != null && !viewerId.equals(userId)) {
+                list.removeIf(dc -> dc.getHidden() != null && dc.getHidden() == 1);
+            }
             result.put("success", true);
             result.put("data", list);
         } catch (Exception e) {

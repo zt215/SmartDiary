@@ -15,6 +15,7 @@ public class DiaryCircle {
     private Date updateTime; // 更新时间
     private Integer likeCount; // 点赞数
     private Integer commentCount; // 评论数
+    private Integer hidden; // 是否隐藏 0否 1是
     
     // 关联用户信息（非数据库字段）
     private String userName; // 用户名

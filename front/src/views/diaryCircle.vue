@@ -126,6 +126,7 @@
       title="选择要发布的日记"
       width="560px"
       destroy-on-close
+      append-to-body
       @closed="resetPickerFilters"
     >
       <div v-if="pickerLoading" class="picker-status">加载中...</div>
@@ -179,6 +180,7 @@ import {
   createQuillModules
 } from '../utils/richContent';
 import { formatDateTime, formatDateOnly, toDateKey } from '../utils/dateFormat';
+import { isUserBannedResponse, showUserBanAlert } from '../utils/banNotice';
 
 export default {
   name: 'DiaryCircle',
@@ -462,6 +464,8 @@ export default {
           this.hidePublishBox();
           
           ElMessage.success(this.feedFilter === 'friends' ? '发布成功，可在「全部」中查看' : '发布成功');
+        } else if (isUserBannedResponse(res)) {
+          await showUserBanAlert(res);
         } else {
           ElMessage.error(res?.message || '发布失败');
         }

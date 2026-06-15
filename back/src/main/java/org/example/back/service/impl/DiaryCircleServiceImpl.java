@@ -118,6 +118,7 @@ public class DiaryCircleServiceImpl implements DiaryCircleService {
         } else {
             list = diaryCircleMapper.selectAllWithUser(offset, pageSize);
         }
+        list.removeIf(dc -> dc.getHidden() != null && dc.getHidden() == 1);
 
         if (currentUserId != null) {
             for (DiaryCircle diaryCircle : list) {

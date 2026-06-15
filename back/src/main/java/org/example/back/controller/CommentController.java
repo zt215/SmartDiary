@@ -3,6 +3,7 @@ package org.example.back.controller;
 import org.example.back.pojo.Comment;
 import org.example.back.service.CommentService;
 import org.example.back.service.DiaryCircleService;
+import org.example.back.service.UserBanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +22,18 @@ public class CommentController {
     @Autowired
     private DiaryCircleService diaryCircleService;
 
+    @Autowired
+    private UserBanService userBanService;
+
     /**
      * 添加评论
      */
     @PostMapping("/add")
     public Map<String, Object> addComment(@RequestBody Comment comment) {
+        Map<String, Object> banBlock = userBanService.buildBanBlockResultIfBanned(comment.getUserId());
+        if (banBlock != null) {
+            return banBlock;
+        }
         Map<String, Object> result = new HashMap<>();
         try {
             int rows = commentService.addComment(comment);

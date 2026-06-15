@@ -20,6 +20,7 @@
         <result property="address" column="address"/>
         <result property="avatar" column="avatar"/>
         <result property="theme" column="theme"/>
+        <result property="accountStatus" column="account_status"/>
     </resultMap>
 
     <!-- 插入用户 -->
@@ -55,6 +56,7 @@
             <if test="address != null">address = #{address},</if>
             <if test="avatar != null">avatar = #{avatar},</if>
             <if test="theme != null">theme = #{theme},</if>
+            <if test="accountStatus != null">account_status = #{accountStatus},</if>
         </set>
         WHERE id = #{id}
     </update>
@@ -80,17 +82,67 @@
     </select>
 
     <resultMap id="AdminUserRowMap" type="org.example.back.pojo.AdminUserRow">
+        <id property="id" column="id"/>
         <result property="uid" column="uid"/>
         <result property="name" column="name"/>
         <result property="phone" column="phone"/>
         <result property="email" column="email"/>
         <result property="birthday" column="birthday"/>
+        <result property="address" column="address"/>
+        <result property="accountStatus" column="account_status"/>
+        <result property="banned" column="banned"/>
+        <result property="banEndTime" column="ban_end_time"/>
+        <result property="banReason" column="ban_reason"/>
+        <result property="banCustomReason" column="ban_custom_reason"/>
     </resultMap>
 
     <select id="selectAllForAdmin" resultMap="AdminUserRowMap">
-        SELECT uid, name, phone, email, birthday
-        FROM user
-        ORDER BY uid ASC
+        SELECT u.id,
+               u.uid,
+               u.name,
+               u.phone,
+               u.email,
+               u.birthday,
+               u.address,
+               u.account_status,
+               CASE WHEN ub.id IS NOT NULL THEN 1 ELSE 0 END AS banned,
+               ub.end_time AS ban_end_time,
+               ub.reason AS ban_reason,
+               ub.custom_reason AS ban_custom_reason
+        FROM user u
+        LEFT JOIN user_ban ub ON ub.id = (
+            SELECT id FROM user_ban
+            WHERE user_id = u.id AND end_time > NOW()
+            ORDER BY end_time DESC LIMIT 1
+        )
+        ORDER BY u.uid ASC
     </select>
+
+    <update id="anonymizeUser">
+        UPDATE user
+        SET name = '已注销用户',
+            password = #{invalidPassword},
+            phone = CONCAT('cancelled_', id),
+            email = NULL,
+            avatar = NULL,
+            address = NULL,
+            birthday = NULL,
+            theme = 'default',
+            account_status = 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateByAdmin" parameterType="org.example.back.pojo.User">
+        UPDATE user
+        SET name = #{name},
+            email = #{email},
+            birthday = #{birthday},
+            address = #{address},
+            allow_phone_search = #{allowPhoneSearch},
+            allow_email_search = #{allowEmailSearch},
+            hide_phone = #{hidePhone},
+            hide_email = #{hideEmail}
+        WHERE id = #{id}
+    </update>
 
 </mapper>

@@ -50,10 +50,66 @@ export function listAdminUsers(enforcerId) {
   })
 }
 
-export function listAdminDiaryCircles(enforcerId, page = 1, pageSize = 20) {
+export function listAdminDiaryCircles(enforcerId, page = 1, pageSize = 20, keyword = '') {
   return service({
     url: `${base}/admin/diary-circles`,
     method: 'get',
-    params: { enforcerId, page, pageSize }
+    params: { enforcerId, page, pageSize, keyword: keyword || undefined }
+  })
+}
+
+export function cancelAdminUser(enforcerId, userId) {
+  return service({
+    url: `${base}/admin/users/${userId}/cancel`,
+    method: 'post',
+    params: { enforcerId }
+  })
+}
+
+export function banAdminUser(userId, data) {
+  return service({
+    url: `${base}/admin/users/${userId}/ban`,
+    method: 'post',
+    data
+  })
+}
+
+export function unbanAdminUser(userId, enforcerId) {
+  return service({
+    url: `${base}/admin/users/${userId}/unban`,
+    method: 'post',
+    params: { enforcerId }
+  })
+}
+
+export function updateAdminUser(userId, data) {
+  return service({
+    url: `${base}/admin/users/${userId}`,
+    method: 'put',
+    data
+  })
+}
+
+export function deleteDiaryCircle(circleId, enforcerId) {
+  return service({
+    url: `${base}/admin/diary-circles/${circleId}/delete`,
+    method: 'post',
+    params: { enforcerId }
+  })
+}
+
+export function hideDiaryCircle(circleId, enforcerId) {
+  return service({
+    url: `${base}/admin/diary-circles/${circleId}/hide`,
+    method: 'post',
+    params: { enforcerId }
+  })
+}
+
+export function showDiaryCircle(circleId, enforcerId) {
+  return service({
+    url: `${base}/admin/diary-circles/${circleId}/show`,
+    method: 'post',
+    params: { enforcerId }
   })
 }

@@ -1,6 +1,7 @@
 package org.example.back.mapper;
 
 import org.example.back.pojo.AdminUserRow;
+import org.apache.ibatis.annotations.Param;
 import org.example.back.pojo.User;
 import java.util.List;
 
@@ -49,4 +50,8 @@ public interface UserMapper {
     User findByUid(Long uid);
 
     List<AdminUserRow> selectAllForAdmin();
+
+    int anonymizeUser(@Param("id") Integer id, @Param("invalidPassword") String invalidPassword);
+
+    int updateByAdmin(User user);
 }

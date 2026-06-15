@@ -152,6 +152,12 @@ public class UserServiceImpl implements UserService {
                 result.put("message", "手机号未注册");
                 return result;
             }
+
+            if (user.getAccountStatus() != null && user.getAccountStatus() == 1) {
+                result.put("success", false);
+                result.put("message", "该账号已注销");
+                return result;
+            }
             
             // 验证密码（使用MD5加密验证）
             if (!user.getPassword().equals(md5(password))) {

@@ -26,4 +26,12 @@ public interface DiaryCircleMapper {
     List<DiaryCircle> selectByUserId(@Param("userId") Integer userId);
 
     int countAll();
+
+    int countByKeyword(@Param("keyword") String keyword);
+
+    List<DiaryCircle> selectAllWithUserByKeyword(@Param("offset") Integer offset, @Param("limit") Integer limit, @Param("keyword") String keyword);
+
+    int hideById(@Param("id") Integer id);
+
+    int showById(@Param("id") Integer id);
 }

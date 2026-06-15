@@ -28,4 +28,6 @@ public interface FriendMapper {
 
     int countAcceptedBetweenUsers(@Param("userId") Integer userId,
                                   @Param("friendUserId") Integer friendUserId);
+
+    int deleteByUserId(@Param("userId") Integer userId);
 }

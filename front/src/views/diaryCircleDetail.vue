@@ -193,6 +193,7 @@ import { getComments, addComment, toggleCommentLike, deleteComment as deleteComm
 import { useCommentReplies, REPLY_VISIBLE_LIMIT, getReplyToUserName } from '../composables/useCommentReplies'
 import CommentLikeButton from '../components/CommentLikeButton.vue'
 import { formatDateTime, formatCommentTime } from '../utils/dateFormat'
+import { isUserBannedResponse, showUserBanAlert } from '../utils/banNotice'
 
 export default {
   name: 'DiaryCircleDetailView',
@@ -343,6 +344,8 @@ export default {
           newComment.value = ''
           diary.value.commentCount = (diary.value.commentCount || 0) + 1
           ElMessage.success(parentId ? '回复成功' : '评论成功')
+        } else if (isUserBannedResponse(res)) {
+          await showUserBanAlert(res)
         } else {
           ElMessage.error(res?.message || '评论失败')
         }

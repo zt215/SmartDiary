@@ -199,6 +199,8 @@
 
       destroy-on-close
 
+      append-to-body
+
       @closed="onDiariesClosed"
 
     >
@@ -250,6 +252,7 @@
       title="好友资料"
       width="420px"
       destroy-on-close
+      append-to-body
       @closed="onProfileClosed"
     >
       <div v-if="profileLoading" class="profile-loading">加载中...</div>
@@ -866,7 +869,8 @@ export default {
 
 .friends-page {
 
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
 
   background: var(--bg-color, #f5f5f5);
 

@@ -12,12 +12,14 @@
         <result property="updateTime" column="update_time"/>
         <result property="userName" column="name"/>
         <result property="userAvatar" column="avatar"/>
+        <result property="hidden" column="hidden"/>
     </resultMap>
 
     <sql id="DiaryCircleSelectColumns">
         dc.id,
         dc.user_id,
         dc.content,
+        dc.hidden,
         dc.create_time,
         dc.update_time,
         (SELECT COUNT(*) FROM diary_circle_like dcl WHERE dcl.diary_circle_id = dc.id) AS like_count,
@@ -54,6 +56,15 @@
         SELECT COUNT(*) FROM diary_circle
     </select>
 
+    <select id="countByKeyword" resultType="int">
+        SELECT COUNT(DISTINCT dc.id) FROM diary_circle dc
+        LEFT JOIN user u ON dc.user_id = u.id
+        LEFT JOIN comment c ON c.circle_id = dc.id
+        WHERE (u.name LIKE CONCAT('%', #{keyword}, '%')
+            OR dc.content LIKE CONCAT('%', #{keyword}, '%')
+            OR c.content LIKE CONCAT('%', #{keyword}, '%'))
+    </select>
+
     <select id="selectAllWithUser" resultMap="DiaryCircleResultMap">
         SELECT
         <include refid="DiaryCircleSelectColumns"/>,
@@ -61,6 +72,21 @@
         u.avatar
         FROM diary_circle dc
         LEFT JOIN user u ON dc.user_id = u.id
+        ORDER BY dc.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectAllWithUserByKeyword" resultMap="DiaryCircleResultMap">
+        SELECT DISTINCT
+        <include refid="DiaryCircleSelectColumns"/>,
+        u.name,
+        u.avatar
+        FROM diary_circle dc
+        LEFT JOIN user u ON dc.user_id = u.id
+        LEFT JOIN comment c ON c.circle_id = dc.id
+        WHERE (u.name LIKE CONCAT('%', #{keyword}, '%')
+            OR dc.content LIKE CONCAT('%', #{keyword}, '%')
+            OR c.content LIKE CONCAT('%', #{keyword}, '%'))
         ORDER BY dc.create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
@@ -78,6 +104,7 @@
             WHERE fr.status = 1
               AND (fr.from_user_id = #{userId} OR fr.to_user_id = #{userId})
         )
+        AND (dc.hidden IS NULL OR dc.hidden = 0)
         ORDER BY dc.create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
@@ -92,5 +119,13 @@
         WHERE dc.user_id = #{userId}
         ORDER BY dc.create_time DESC
     </select>
+
+    <update id="hideById">
+        UPDATE diary_circle SET hidden = 1 WHERE id = #{id}
+    </update>
+
+    <update id="showById">
+        UPDATE diary_circle SET hidden = 0 WHERE id = #{id}
+    </update>
 
 </mapper>

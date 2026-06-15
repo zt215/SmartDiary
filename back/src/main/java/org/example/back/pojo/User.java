@@ -19,4 +19,6 @@ public class User {
     private String address;  // 地址字段
     private String avatar;  // 头像URL字段
     private String theme;  // 主题字段
+    /** 0 正常 1 已注销 */
+    private Integer accountStatus;
 }

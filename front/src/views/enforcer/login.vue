@@ -16,7 +16,7 @@
     </div>
 
     <div class="right" :class="{ show: showRight }">
-      <h1 class="logo logo-enforcer">字迹—执法者</h1>
+      <h1 class="logo logo-enforcer">字迹—执法堂</h1>
       <div class="form">
         <div class="field">
           <el-input
@@ -44,11 +44,11 @@
           :loading="loading"
           @click="submitLogin"
         >
-          进入执法台
+          进入执法堂
         </el-button>
         <div class="bottom">
           <el-button link @click="$router.push('/enforcer/forgotpassword')">忘记密码</el-button>
-          <el-button link @click="$router.push('/')">返回执笔人登录</el-button>
+          <el-button link @click="$router.push('/')">返回字迹登录</el-button>
         </div>
       </div>
     </div>

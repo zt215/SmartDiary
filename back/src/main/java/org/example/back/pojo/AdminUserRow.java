@@ -13,5 +13,10 @@ public class AdminUserRow {
     private String phone;
     private String email;
     private Date birthday;
-    private String theme;
+    private String address;
+    private Integer accountStatus;
+    private Boolean banned;
+    private Date banEndTime;
+    private String banReason;
+    private String banCustomReason;
 }
