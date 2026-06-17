@@ -18,13 +18,12 @@
     <!-- 右侧栏 -->
     <div class="right" :class="{ show: showRight }">
       <h1 class="logo">字迹</h1>
-      <div class="form">
+      <form ref="loginFormRef" class="form" @submit.prevent="login">
         <div class="account-select">
           <el-input
             v-model="account"
-            placeholder="请输入手机号"
+            placeholder="手机号 / UID / 邮箱"
             style="width: 100%"
-            @keyup.enter="login"
           />
         </div>
         <div class="password-box">
@@ -33,7 +32,6 @@
             v-model="password"
             placeholder="请输入密码"
             style="width: 100%"
-            @keyup.enter="login"
           >
             <template #suffix>
               <el-button link @click="showPassword = !showPassword">
@@ -216,7 +214,8 @@
       <div class="enforcer-entry">
         <el-button link @click="$router.push('/enforcer/login')">前往执法堂>>>>>></el-button>
       </div>
-      </div>
+      <button type="submit" class="login-submit-hidden" tabindex="-1" aria-hidden="true">登录</button>
+      </form>
     </div>
 
     <Teleport to="body">
@@ -232,6 +231,7 @@ import { login as apiLogin } from '../api/auth'
 import { ref, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { useLoginEnter } from '../utils/loginEnter'
 
 const HomeView = defineAsyncComponent(() => import('./home.vue'))
 
@@ -355,6 +355,7 @@ function regenerateWind() {
 }
 
 const router = useRouter()
+const loginFormRef = ref(null)
 
 /** 飞出屏幕左侧后额外多飞的像素 */
 const QUILL_FLY_EXIT_PADDING = 64
@@ -521,7 +522,7 @@ onUnmounted(() => {
 const login = async () => {
   if (isLoggingIn.value || isTransitioning.value) return
   if (!account.value.trim() || !password.value.trim()) {
-    ElMessage.warning('请输入手机号和密码')
+    ElMessage.warning('请输入账号和密码')
     return
   }
 
@@ -541,14 +542,12 @@ const login = async () => {
       await startOrchestratedTransition()
       showHomeTransition.value = false
       flyQuill.value = false
-      await router.replace({ path: '/home', query: { login: 'success' } })
+      await router.push({ path: '/home', query: { login: 'success' } })
       resetTransition()
     } else {
-      isLoggingIn.value = false
       ElMessage.error(res?.message || '账号或密码错误')
     }
   } catch (e) {
-    isLoggingIn.value = false
     console.error('Login error:', e)
     if (e.response) {
       ElMessage.error(e.response.data?.message || '登录失败: ' + e.response.status)
@@ -557,8 +556,12 @@ const login = async () => {
     } else {
       ElMessage.error('登录失败: ' + e.message)
     }
+  } finally {
+    isLoggingIn.value = false
   }
 }
+
+useLoginEnter(loginFormRef, () => login())
 </script>
 <style>
 .home-transition-panel {
@@ -698,6 +701,20 @@ html.login-quill-transition body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+.login-submit-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 .account-select {
   position: relative;

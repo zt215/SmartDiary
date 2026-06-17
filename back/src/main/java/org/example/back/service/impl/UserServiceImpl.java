@@ -138,18 +138,35 @@ public class UserServiceImpl implements UserService {
         return result;
     }
 
+    private User findUserByAccount(String account) {
+        if (account == null || account.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = account.trim();
+        // UID: pure digits ≥ 8 characters
+        if (trimmed.matches("^\\d{8,}$")) {
+            User user = userMapper.findByUid(Long.parseLong(trimmed));
+            if (user != null) return user;
+        }
+        // Email
+        if (EMAIL_PATTERN.matcher(trimmed).matches()) {
+            User user = userMapper.findByEmail(trimmed);
+            if (user != null) return user;
+        }
+        // Fallback: phone
+        return userMapper.findByPhone(trimmed);
+    }
+
     @Override
-    public Map<String, Object> login(String phone, String password) {
+    public Map<String, Object> login(String account, String password) {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            // 根据手机号查找用户
-            User user = userMapper.findByPhone(phone);
+            User user = findUserByAccount(account);
             
-            // 检查用户是否存在
             if (user == null) {
                 result.put("success", false);
-                result.put("message", "手机号未注册");
+                result.put("message", "账号不存在");
                 return result;
             }
 

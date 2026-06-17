@@ -143,6 +143,7 @@
                     placeholder="请输入当前密码"
                     show-password
                     autocomplete="current-password"
+                    @keyup.enter="handleChangePassword"
                   />
                 </el-form-item>
                 <el-form-item label="新密码">
@@ -152,6 +153,7 @@
                     placeholder="至少8位，含字母和数字"
                     show-password
                     autocomplete="new-password"
+                    @keyup.enter="handleChangePassword"
                   />
                 </el-form-item>
                 <el-form-item label="确认新密码">
@@ -161,6 +163,7 @@
                     placeholder="请再次输入新密码"
                     show-password
                     autocomplete="new-password"
+                    @keyup.enter="handleChangePassword"
                   />
                 </el-form-item>
                 <el-form-item>

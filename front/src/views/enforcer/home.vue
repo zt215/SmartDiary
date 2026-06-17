@@ -192,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -557,8 +557,15 @@ const submitEdit = async () => {
 }
 
 const logout = () => {
-  localStorage.removeItem('enforcerInfo')
-  router.push('/enforcer/login')
+  ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    localStorage.removeItem('enforcerInfo')
+    ElMessage.success('已退出登录')
+    router.replace('/enforcer/login')
+  }).catch(() => {})
 }
 
 onMounted(() => {
@@ -577,6 +584,41 @@ onMounted(() => {
   loadCircles()
 })
 
+const handleKeydown = (e) => {
+  if (e.key === 'Escape') {
+    // 如果有弹窗打开，先关闭弹窗
+    if (banVisible.value) {
+      banVisible.value = false
+      e.stopImmediatePropagation()
+      return
+    }
+    if (editVisible.value) {
+      editVisible.value = false
+      e.stopImmediatePropagation()
+      return
+    }
+    if (banDetailVisible.value) {
+      banDetailVisible.value = false
+      e.stopImmediatePropagation()
+      return
+    }
+    if (circleDetailVisible.value) {
+      circleDetailVisible.value = false
+      e.stopImmediatePropagation()
+      return
+    }
+    e.stopImmediatePropagation()
+    logout()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown, true)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown, true)
+})
 
 </script>
 

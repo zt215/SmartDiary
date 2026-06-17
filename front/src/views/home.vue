@@ -379,9 +379,9 @@ export default {
       return days;
     }
   },
-  mounted() {
-    // 检查是否刚登录成功
-    if (this.$route.query.login === 'success') {
+ mounted() {
+   // 检查是否刚登录成功
+   if (this.$route.query.login === 'success') {
       ElMessage.success('登录成功！');
       // 移除URL中的查询参数
       this.$router.replace({ query: {} });
@@ -408,19 +408,42 @@ export default {
       this.$router.push('/');
     }
     
-    // 页面加载时恢复用户之前选择的主题
-    // 严格使用数据库中用户的主题配置，确保每个账号的主题独立
-    const userTheme = this.user.theme;
-    if (userTheme) {
-      // 如果数据库中有主题配置，直接使用
-      this.changeTheme(userTheme);
-      console.log('使用数据库中的主题:', userTheme);
-    } else {
-      // 如果数据库中没有主题配置（老用户），使用默认主题
-      this.changeTheme('default');
-      console.log('用户使用默认主题');
-    }
+   // 页面加载时恢复用户之前选择的主题
+   // 严格使用数据库中用户的主题配置，确保每个账号的主题独立
+   const userTheme = this.user.theme;
+   if (userTheme) {
+     // 如果数据库中有主题配置，直接使用
+     this.changeTheme(userTheme);
+     console.log('使用数据库中的主题:', userTheme);
+   } else {
+     // 如果数据库中没有主题配置（老用户），使用默认主题
+     this.changeTheme('default');
+     console.log('用户使用默认主题');
+   }
+
+   // 注册 ESC 键监听：关闭弹窗（返回逻辑）
+   this._handleKeydown = (e) => {
+     if (e.key === 'Escape') {
+       if (this.showStatisticsModal) {
+         this.closeStatisticsModal()
+          e.stopImmediatePropagation()
+         return
+       }
+       if (this.showThemeModal) {
+         this.closeThemeModal()
+          e.stopImmediatePropagation()
+         return
+       }
+        // 无弹窗时不阻止，让 escNavigation 全局处理器接管
+     }
+   }
+    document.addEventListener('keydown', this._handleKeydown, true)
   },
+ beforeUnmount() {
+   if (this._handleKeydown) {
+      document.removeEventListener('keydown', this._handleKeydown, true)
+   }
+ },
   methods: {
     async loadDiaries() {
       if (!this.user || !this.user.id) {
