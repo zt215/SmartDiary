@@ -446,7 +446,7 @@ public class EnforcerServiceImpl implements EnforcerService {
     }
 
     @Override
-    public Map<String, Object> showDiaryCircle(Integer enforcerId, Integer circleId) {
+   public Map<String, Object> showDiaryCircle(Integer enforcerId, Integer circleId) {
         if (!verifyEnforcerSession(enforcerId)) {
             return fail("请先登录执法者账号");
         }
@@ -460,7 +460,118 @@ public class EnforcerServiceImpl implements EnforcerService {
             result.put("message", "动态已恢复显示");
             return result;
         } catch (Exception e) {
-            return fail("恢复异常: " + e.getMessage());
+           return fail("恢复异常: " + e.getMessage());
+       }
+   }
+
+    @Override
+    public Map<String, Object> listEnforcers(Integer enforcerId) {
+        if (!verifyEnforcerSession(enforcerId)) {
+            return fail("请先登录执法者账号");
         }
+        try {
+            List<Enforcer> enforcers = enforcerMapper.findAll();
+            for (Enforcer e : enforcers) {
+                e.setPassword(null);
+            }
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "查询成功");
+            result.put("data", enforcers);
+            return result;
+        } catch (Exception e) {
+            return fail("查询异常: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, Object> addEnforcer(Integer enforcerId, String phone, String password) {
+        if (!verifyEnforcerSession(enforcerId)) {
+            return fail("请先登录执法者账号");
+        }
+        if (!StringUtils.hasText(phone)) {
+            return fail("手机号不能为空");
+        }
+        if (!StringUtils.hasText(password)) {
+            return fail("密码不能为空");
+        }
+        User user = userMapper.findByPhone(phone.trim());
+        if (user == null) {
+            return fail("该手机号未注册用户");
+        }
+        Enforcer existingByPhone = enforcerMapper.findByPhone(phone.trim());
+        if (existingByPhone != null) {
+            return fail("该手机号已是管理员");
+        }
+        Enforcer existingByUid = enforcerMapper.findByUidExcludingId(user.getUid(), null);
+        if (existingByUid != null) {
+            return fail("该用户已是管理员");
+        }
+        Enforcer enforcer = new Enforcer();
+        enforcer.setUid(user.getUid());
+        enforcer.setName(user.getName());
+        enforcer.setPassword(md5(password));
+        enforcer.setPhone(user.getPhone());
+        enforcer.setEmail(user.getEmail());
+        enforcerMapper.insert(enforcer);
+        enforcer.setPassword(null);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "管理员添加成功");
+        result.put("data", enforcer);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> deleteEnforcer(Integer enforcerId, Integer targetEnforcerId) {
+        if (!verifyEnforcerSession(enforcerId)) {
+            return fail("请先登录执法者账号");
+        }
+        if (targetEnforcerId == null) {
+            return fail("目标管理员ID不能为空");
+        }
+        if (targetEnforcerId.equals(enforcerId)) {
+            return fail("不能删除自己");
+        }
+        Enforcer target = enforcerMapper.findById(targetEnforcerId);
+        if (target == null) {
+            return fail("管理员不存在");
+        }
+        enforcerMapper.deleteById(targetEnforcerId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "管理员已删除");
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> searchUsers(Integer enforcerId, String keyword) {
+        if (!verifyEnforcerSession(enforcerId)) {
+            return fail("请先登录执法者账号");
+        }
+        if (!StringUtils.hasText(keyword)) {
+            return fail("请输入搜索关键词");
+        }
+        java.util.List<User> users = userMapper.searchByKeyword(keyword.trim());
+        if (users.isEmpty()) {
+            return fail("未找到匹配的用户");
+        }
+        java.util.List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (User user : users) {
+            Enforcer existing = enforcerMapper.findByUidExcludingId(user.getUid(), null);
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", user.getId());
+            item.put("uid", user.getUid());
+            item.put("name", user.getName());
+            item.put("phone", user.getPhone());
+            item.put("email", user.getEmail());
+            item.put("alreadyEnforcer", existing != null);
+            list.add(item);
+        }
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "查询成功");
+        result.put("data", list);
+        return result;
     }
 }

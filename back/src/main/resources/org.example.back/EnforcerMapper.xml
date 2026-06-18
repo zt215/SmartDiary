@@ -31,8 +31,29 @@
         SELECT * FROM enforcer WHERE uid = #{uid} LIMIT 1
     </select>
 
-    <update id="updatePassword">
-        UPDATE enforcer SET password = #{password}, update_time = NOW() WHERE id = #{id}
-    </update>
+   <update id="updatePassword">
+       UPDATE enforcer SET password = #{password}, update_time = NOW() WHERE id = #{id}
+   </update>
+
+    <select id="findAll" resultMap="EnforcerResultMap">
+        SELECT * FROM enforcer ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="org.example.back.pojo.Enforcer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO enforcer(uid, name, password, phone, email, create_time, update_time)
+        VALUES(#{uid}, #{name}, #{password}, #{phone}, #{email}, NOW(), NOW())
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM enforcer WHERE id = #{id}
+    </delete>
+
+    <select id="findByUidExcludingId" resultMap="EnforcerResultMap">
+        SELECT * FROM enforcer WHERE uid = #{uid}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+        LIMIT 1
+    </select>
 
 </mapper>

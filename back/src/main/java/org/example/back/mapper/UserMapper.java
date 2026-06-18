@@ -53,5 +53,7 @@ public interface UserMapper {
 
     int anonymizeUser(@Param("id") Integer id, @Param("invalidPassword") String invalidPassword);
 
-    int updateByAdmin(User user);
+   int updateByAdmin(User user);
+
+    java.util.List<User> searchByKeyword(@Param("keyword") String keyword);
 }

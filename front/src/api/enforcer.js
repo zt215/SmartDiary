@@ -1,4 +1,4 @@
-import service from './auth.js'
+﻿import service from './auth.js'
 
 const base = '/enforcer'
 
@@ -111,5 +111,38 @@ export function showDiaryCircle(circleId, enforcerId) {
     url: `${base}/admin/diary-circles/${circleId}/show`,
     method: 'post',
     params: { enforcerId }
+  })
+}
+
+export function listAdminEnforcers(enforcerId) {
+  return service({
+    url: `${base}/admin/enforcers`,
+    method: 'get',
+    params: { enforcerId }
+  })
+}
+
+export function addAdminEnforcer(enforcerId, data) {
+  return service({
+    url: `${base}/admin/enforcers`,
+    method: 'post',
+    params: { enforcerId },
+    data
+  })
+}
+
+export function deleteAdminEnforcer(enforcerId, targetEnforcerId) {
+  return service({
+    url: `${base}/admin/enforcers/${targetEnforcerId}`,
+    method: 'delete',
+    params: { enforcerId }
+  })
+}
+
+export function searchUsersByKeyword(enforcerId, keyword) {
+  return service({
+    url: `${base}/admin/users/search`,
+    method: 'get',
+    params: { enforcerId, keyword }
   })
 }

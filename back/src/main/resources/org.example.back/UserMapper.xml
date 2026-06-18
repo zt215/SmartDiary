@@ -132,7 +132,7 @@
         WHERE id = #{id}
     </update>
 
-    <update id="updateByAdmin" parameterType="org.example.back.pojo.User">
+   <update id="updateByAdmin" parameterType="org.example.back.pojo.User">
         UPDATE user
         SET name = #{name},
             email = #{email},
@@ -142,7 +142,18 @@
             allow_email_search = #{allowEmailSearch},
             hide_phone = #{hidePhone},
             hide_email = #{hideEmail}
-        WHERE id = #{id}
-    </update>
+       WHERE id = #{id}
+   </update>
+
+    <select id="searchByKeyword" resultMap="UserResultMap">
+        SELECT * FROM user
+        WHERE account_status IS NULL OR account_status = 0
+        AND (
+            phone LIKE CONCAT('%', #{keyword}, '%')
+            OR CAST(uid AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+            OR email LIKE CONCAT('%', #{keyword}, '%')
+        )
+        ORDER BY uid ASC
+    </select>
 
 </mapper>

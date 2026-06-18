@@ -33,5 +33,13 @@ public interface EnforcerService {
 
     Map<String, Object> hideDiaryCircle(Integer enforcerId, Integer circleId);
 
-    Map<String, Object> showDiaryCircle(Integer enforcerId, Integer circleId);
+   Map<String, Object> showDiaryCircle(Integer enforcerId, Integer circleId);
+
+    Map<String, Object> listEnforcers(Integer enforcerId);
+
+    Map<String, Object> addEnforcer(Integer enforcerId, String phone, String password);
+
+    Map<String, Object> deleteEnforcer(Integer enforcerId, Integer targetEnforcerId);
+
+    Map<String, Object> searchUsers(Integer enforcerId, String keyword);
 }

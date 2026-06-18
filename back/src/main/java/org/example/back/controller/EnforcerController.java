@@ -102,7 +102,7 @@ public class EnforcerController {
         return enforcerService.showDiaryCircle(enforcerId, circleId);
     }
 
-    @PutMapping("/enforcer/admin/users/{userId}")
+   @PutMapping("/enforcer/admin/users/{userId}")
     public Map<String, Object> updateUser(
             @PathVariable("userId") Integer userId,
             @RequestBody Map<String, Object> body) {
@@ -118,6 +118,32 @@ public class EnforcerController {
         req.setAllowEmailSearch((Boolean) body.get("allowEmailSearch"));
         req.setHidePhone((Boolean) body.get("hidePhone"));
         req.setHideEmail((Boolean) body.get("hideEmail"));
-        return enforcerService.updateUser(enforcerId, userId, req);
+       return enforcerService.updateUser(enforcerId, userId, req);
+   }
+
+    @GetMapping("/enforcer/admin/enforcers")
+    public Map<String, Object> listEnforcers(@RequestParam("enforcerId") Integer enforcerId) {
+        return enforcerService.listEnforcers(enforcerId);
+    }
+
+    @PostMapping("/enforcer/admin/enforcers")
+    public Map<String, Object> addEnforcer(
+            @RequestParam("enforcerId") Integer enforcerId,
+            @RequestBody Map<String, String> body) {
+        return enforcerService.addEnforcer(enforcerId, body.get("phone"), body.get("password"));
+    }
+
+    @DeleteMapping("/enforcer/admin/enforcers/{targetEnforcerId}")
+    public Map<String, Object> deleteEnforcer(
+            @RequestParam("enforcerId") Integer enforcerId,
+            @PathVariable("targetEnforcerId") Integer targetEnforcerId) {
+        return enforcerService.deleteEnforcer(enforcerId, targetEnforcerId);
+    }
+
+    @GetMapping("/enforcer/admin/users/search")
+    public Map<String, Object> searchUsers(
+            @RequestParam("enforcerId") Integer enforcerId,
+            @RequestParam("keyword") String keyword) {
+        return enforcerService.searchUsers(enforcerId, keyword);
     }
 }

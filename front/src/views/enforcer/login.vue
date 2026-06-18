@@ -88,9 +88,9 @@ const submitLogin = async () => {
       password: password.value
     })
     if (res?.success && res.data) {
-      localStorage.setItem('enforcerInfo', JSON.stringify(res.data))
-      ElMessage.success('登录成功')
-      router.replace('/enforcer/home')
+     localStorage.setItem('enforcerInfo', JSON.stringify(res.data))
+     ElMessage.success('登录成功')
+      await router.replace('/enforcer/home')
     } else {
       ElMessage.error(res?.message || '登录失败')
     }
