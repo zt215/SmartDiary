@@ -1,9 +1,13 @@
-﻿<template>
+<template>
   <div class="enforcer-home">
     <header class="top-bar">
       <div class="brand">
-        <span class="brand-title">字迹 · 执法堂</span>
-        <span class="brand-sub">{{ enforcerName }}</span>
+        <div class="brand-icon">执</div>
+        <div class="brand-text">
+          <span class="brand-title">字迹 · 执法堂</span>
+          <span class="brand-divider">|</span>
+          <span class="brand-sub">{{ enforcerName }}</span>
+        </div>
       </div>
       <el-button type="danger" plain @click="logout">退出执法堂</el-button>
     </header>
@@ -750,7 +754,7 @@ onUnmounted(() => {
 <style scoped>
 .enforcer-home {
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden auto;
   background: #f0f2f5;
   padding: 0 24px 32px;
 }
@@ -758,17 +762,55 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 0;
+  padding: 0 32px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0 -24px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -1px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.brand-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 .brand-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+.brand-divider {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 18px;
+  font-weight: 300;
 }
 .brand-sub {
-  margin-left: 16px;
-  color: #909399;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  letter-spacing: 0.3px;
 }
 .main-tabs {
   background: #fff;
