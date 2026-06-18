@@ -42,7 +42,7 @@ export function resolveEscParentRoute(route) {
 export function shouldIgnoreEscForTarget(target) {
   if (!target || !(target instanceof HTMLElement)) return false
   const tag = target.tagName
-  // 单行输入框不拦截，便于好友/字迹圈/执法台等页面 ESC 返回
+  // 单行输入框不拦截，便于好友/字迹圈/执法堂等页面 ESC 返回
   if (tag === 'TEXTAREA' || tag === 'SELECT') return true
   if (target.isContentEditable) return true
   return !!target.closest('.ql-editor, .ql-container')

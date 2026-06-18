@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ElForm,
@@ -220,23 +220,22 @@ const validatePhoneAndCode = async () => {
     }
     
     try {
+        // 调用后端API验证验证码
         const response = await service.post('/auth/verify-code', {
             phone: form.phone,
             verificationCode: form.verificationCode
         })
         
         if (response.success) {
+            // 验证通过，进入下一步
+            console.log('手机号和验证码验证通过')
             step.value = 2
         } else {
-            ElMessage.error(response.message || '验证码错误或已过期')
+            ElMessage.error(response.message || '验证码错误')
         }
     } catch (error) {
-        console.error('验证验证码失败:', error)
-        if (error.response && error.response.data && error.response.data.message) {
-            ElMessage.error(error.response.data.message)
-        } else {
-            ElMessage.error('验证失败，请稍后重试')
-        }
+        console.error('验证失败:', error)
+        ElMessage.error('验证过程中发生错误，请稍后再试')
     }
 }
 
@@ -245,13 +244,6 @@ const resetPassword = async () => {
     // 验证密码是否一致
     if (form.newPassword !== form.confirmNewPassword) {
         ElMessage.error('两次输入的密码不一致')
-        return
-    }
-    
-    // 密码强度验证（至少8位，包含字母和数字）
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/
-    if (!passwordRegex.test(form.newPassword)) {
-        ElMessage.error('密码至少8位，且必须包含字母和数字')
         return
     }
     
@@ -283,6 +275,24 @@ const resetPassword = async () => {
         }
     }
 }
+
+const handleKeydown = (e) => {
+    if (e.key === 'Escape') {
+        if (step.value === 2) {
+            step.value = 1
+        } else {
+            goToLogin()
+        }
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('keydown', handleKeydown, true)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeydown, true)
+})
 </script>
 
 <style scoped>
@@ -334,18 +344,9 @@ const resetPassword = async () => {
     z-index: 1;
     flex: 1;
     max-width: 55%;
-}
-
-.left-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .title {
@@ -354,9 +355,7 @@ const resetPassword = async () => {
     background: linear-gradient(90deg, #ff7e5f, #3a0885);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 90px;
-    margin-left: -10%;
 }
 
 .subtitle {
@@ -365,9 +364,7 @@ const resetPassword = async () => {
     background: linear-gradient(90deg,#3a0885,#fabcac);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 70px;
-    margin-left: -10%;
 }
 
 .welcome {
@@ -376,9 +373,7 @@ const resetPassword = async () => {
     background: linear-gradient(90deg,#ffffff,#e144e4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 70px;
-    margin-left: -10%;
 }
 
 .right-bar {

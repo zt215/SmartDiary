@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="container">
     <div class="video-background">
       <video autoplay muted loop playsinline class="background-video">
@@ -13,7 +13,7 @@
       </div>
       <div v-else>
         <div class="title">执法者，请牢记凭证</div>
-        <div class="subtitle">重置后将使用新密码<br />进入执法台</div>
+        <div class="subtitle">重置后将使用新密码<br />进入执法堂</div>
       </div>
     </div>
     <div class="right-bar">
@@ -32,7 +32,7 @@
                   :disabled="isSendingCode || countdown > 0"
                   @click="sendCode"
                 >
-                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+                  {{ countdown > 0 ? `${countdown}秒后重发` : '获取验证码' }}
                 </el-button>
               </div>
             </el-form-item>
@@ -154,10 +154,15 @@ const resetPwd = async () => {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 .background-video {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
   object-fit: cover;
 }
 .video-overlay {
@@ -165,36 +170,100 @@ const resetPwd = async () => {
   inset: 0;
   background: rgba(0, 0, 0, 0.25);
 }
-.left-bar,
+.left-bar {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  max-width: 55%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #f8f0e8;
+}
+.left-bar .title {
+  font-size: 50px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  background: linear-gradient(90deg, #ff7e5f, #3a0885);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  text-align: center;
+}
+.left-bar .subtitle {
+  font-size: 60px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  background: linear-gradient(90deg, #3a0885, #fabcac);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 20px 0 0;
+  text-align: center;
+}
 .right-bar {
   position: relative;
   z-index: 1;
   flex: 1;
-  padding: 48px;
-  color: #f8f0e8;
-}
-.left-bar .title {
-  font-size: 36px;
-  font-family: 'Zhi Mang Xing', 'KaiTi', serif;
+  max-width: 450px;
+  width: 450px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .logo {
-  font-size: 42px;
+  font-size: 34px;
+  white-space: nowrap;
   text-align: center;
-  margin-bottom: 32px;
-  font-family: 'Zhi Mang Xing', 'KaiTi', serif;
-  background: linear-gradient(90deg, #fff, #d32ce6);
+  margin: 0 auto 24px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  background: linear-gradient(90deg, #ff7e5f, #3a0885);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+.form {
+  width: 100%;
 }
 .code-row {
   display: flex;
   gap: 8px;
   width: 100%;
 }
+.code-row .el-button {
+  min-width: 110px;
+}
 .form-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  justify-content: space-between;
   margin-top: 16px;
 }
+.form-actions :deep(.el-button) {
+  flex: 1;
+}
+.success-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+.success-title {
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  font-size: 34px;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #ff7e5f, #3a0885);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 30px;
+}
+.success-message {
+  font-size: 24px;
+  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
+  background: linear-gradient(90deg, #ffffff, #e144e4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 </style>
+
+

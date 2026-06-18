@@ -154,7 +154,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '@/api/auth'
 import service from '@/api/auth'
@@ -371,6 +371,24 @@ const handleRegister = async () => {
         ElMessage.error('注册过程中发生错误，请稍后再试')
     }
 }
+
+const handleKeydown = (e) => {
+    if (e.key === 'Escape') {
+        if (step.value === 2) {
+            step.value = 1
+        } else {
+            goToLogin()
+        }
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('keydown', handleKeydown, true)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeydown, true)
+})
 </script>
 
 <style scoped>
@@ -424,27 +442,13 @@ const handleRegister = async () => {
     max-width: 55%;
 }
 
-.left-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 1;
-}
-
 .title {
     font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
     font-size: 50px;
     background: linear-gradient(90deg, #ff7e5f, #3a0885);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 90px;
-    margin-left: -10%;
 }
 
 .subtitle {
@@ -453,9 +457,7 @@ const handleRegister = async () => {
     background: linear-gradient(90deg,#3a0885,#fabcac);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 70px;
-    margin-left: -10%;
 }
 
 .welcome {
@@ -464,9 +466,7 @@ const handleRegister = async () => {
     background: linear-gradient(90deg,#ffffff,#e144e4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: auto;
     margin-top: 70px;
-    margin-left: -10%;
 }
 
 .right-bar {
