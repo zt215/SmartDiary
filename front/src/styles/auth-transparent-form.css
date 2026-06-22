@@ -1,4 +1,4 @@
-/* 与 login.vue 一致的透明表单输入（注册 / 忘记密码） */
+﻿/* 与 login.vue 一致的透明表单输入（注册 / 忘记密码） */
 .auth-transparent-form .el-input {
   background: transparent;
   border-radius: 10px;
@@ -39,7 +39,7 @@
 .auth-transparent-form .el-input__clear,
 .auth-transparent-form .el-select__caret,
 .auth-transparent-form .el-cascader .el-input .icon-arrow-down {
-  color: rgba(250, 188, 172, 0.9);
+  color: #f8f0e8;
 }
 
 .auth-transparent-form .el-date-editor {
@@ -58,3 +58,4 @@
   color: #f8f0e8;
   text-shadow: 0 1px 4px rgba(58, 8, 133, 0.45);
 }
+

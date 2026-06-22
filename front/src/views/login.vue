@@ -17,7 +17,7 @@
     </div>
     <!-- 右侧栏 -->
     <div class="right" :class="{ show: showRight }">
-      <h1 class="logo">字迹</h1>
+      <img src="/logo.png" alt="字迹" class="logo" />
       <form ref="loginFormRef" class="form" @submit.prevent="login">
         <div class="account-select">
           <el-input
@@ -688,14 +688,13 @@ html.login-quill-transition body {
   right: 0;
 }
 .logo {
-  font-family: 'Zhi Mang Xing', 'KaiTi', cursive, serif;
-  font-size: 90px;
-  background: linear-gradient(90deg,#ffffff,#d32ce6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  margin-top: 30%;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  display: block;
+  width: auto;
+  height: 100px;
+  max-width: min(280px, 72%);
+  margin: 30% auto 0;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 }
 .form {
   display: flex;
@@ -959,7 +958,7 @@ html.login-quill-transition body {
     font-size: 60px;
   }
   .logo {
-    font-size: 70px;
+    height: 72px;
   }
 }
 
@@ -978,7 +977,7 @@ html.login-quill-transition body {
     font-size: 40px;
   }
   .logo {
-    font-size: 50px;
+    height: 56px;
     margin-top: 20%;
   }
 }
