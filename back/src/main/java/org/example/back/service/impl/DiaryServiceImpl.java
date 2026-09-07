@@ -22,7 +22,6 @@ public class DiaryServiceImpl implements DiaryService {
         
         try {
             Date now = new Date();
-            // 如果前端传了 createTime，就使用传入的日期；否则默认用当前时间
             if (diary.getCreateTime() == null) {
                 diary.setCreateTime(now);
             }

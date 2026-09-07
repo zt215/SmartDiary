@@ -36,17 +36,17 @@ public class EnforcerController {
     public Map<String, Object> checkPhone(@RequestBody Map<String, String> body) {
         return enforcerService.checkPhoneExists(body.get("phone"));
     }
-
+    
     @PostMapping("/enforcer/auth/verify-code")
     public Map<String, Object> verifyCode(@RequestBody Map<String, String> body) {
         return enforcerService.verifyCode(body.get("phone"), body.get("verificationCode"));
     }
-
+    
     @GetMapping("/enforcer/admin/users")
     public Map<String, Object> listUsers(@RequestParam("enforcerId") Integer enforcerId) {
         return enforcerService.listUsers(enforcerId);
     }
-
+    
     @GetMapping("/enforcer/admin/diary-circles")
     public Map<String, Object> listDiaryCircles(
             @RequestParam("enforcerId") Integer enforcerId,

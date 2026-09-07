@@ -29,7 +29,7 @@
         />
       </div>
 
-    <!-- 日期选择（可不是写今日） -->
+    <!-- 日期选择 -->
     <div class="date-picker-container">
       <el-date-picker
         v-model="diaryForm.date"
@@ -226,17 +226,14 @@ export default {
         ElMessage.warning('请输入日记标题')
         return
       }
-
       // 获取内容
       const content = quillEditor.value ? quillEditor.value.root.innerHTML : diaryForm.value.content
-      
-      // 验证内容（纯HTML标签也算空内容）
+      // 验证内容
       const textContent = quillEditor.value ? quillEditor.value.getText().trim() : ''
       if (!textContent) {
         ElMessage.warning('请输入日记内容')
         return
       }
-
       // 获取用户信息
       const userInfo = localStorage.getItem('userInfo')
       if (!userInfo) {
@@ -244,7 +241,6 @@ export default {
         router.push('/')
         return
       }
-
       let user
       try {
         user = JSON.parse(userInfo)
@@ -253,22 +249,18 @@ export default {
         router.push('/')
         return
       }
-
       saving.value = true
       try {
-        // 为了避免时区导致“日期偏一天”，这里取当天中午作为时间基准
         const localDate = diaryForm.value.date
           ? new Date(diaryForm.value.date + 'T12:00:00')
           : new Date()
         const createTimeIso = localDate.toISOString()
-
         const res = await createDiary({
           userId: user.id,
           title: diaryForm.value.title.trim(),
           content: content,
           createTime: createTimeIso
         })
-
         if (res && res.success) {
           ElMessage.success('日记保存成功')
           skipDraftPersist.value = true

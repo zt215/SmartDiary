@@ -19,7 +19,7 @@ public class UserController {
     public Map<String, Object> register(@RequestBody User user) {
         return userService.register(user);
     }
-    
+    // 登录
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Map<String, String> credentials) {
         String phone = credentials.get("account");
@@ -27,6 +27,7 @@ public class UserController {
         return userService.login(phone, password);
     }
 
+    // 忘记密码
     @PostMapping("/forgotpassword")
     public Map<String, Object> forgotPassword(@RequestBody Map<String, String> requestData) {
         String phone = requestData.get("phone");
@@ -35,18 +36,21 @@ public class UserController {
         return userService.forgotPassword(phone, newPassword, verificationCode);
     }
 
+    // 发送验证码
     @PostMapping("/send-verification-code")
     public Map<String, Object> sendVerificationCode(@RequestBody Map<String, String> requestData) {
         String phone = requestData.get("phone");
         return userService.sendVerificationCode(phone);
     }
 
+    // 检查手机号是否存在
     @PostMapping("/check-phone")
     public Map<String, Object> checkPhoneExists(@RequestBody Map<String, String> requestData) {
         String phone = requestData.get("phone");
         return userService.checkPhoneExists(phone);
     }
 
+    // 验证验证码
     @PostMapping("/verify-code")
     public Map<String, Object> verifyCode(@RequestBody Map<String, String> requestData) {
         String phone = requestData.get("phone");
@@ -54,11 +58,13 @@ public class UserController {
         return userService.verifyCode(phone, code);
     }
     
+    // 更新用户信息
     @PutMapping("/update")
     public Map<String, Object> updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
 
+    // 修改密码
     @PutMapping("/change-password")
     public Map<String, Object> changePassword(@RequestBody Map<String, Object> requestData) {
         Object userIdObj = requestData.get("userId");
@@ -68,6 +74,7 @@ public class UserController {
         return userService.changePassword(userId, oldPassword, newPassword);
     }
     
+    // 更新主题
     @PutMapping("/update-theme")
     public Map<String, Object> updateTheme(@RequestBody Map<String, Object> data) {
         Integer userId = (Integer) data.get("userId");
@@ -75,6 +82,7 @@ public class UserController {
         return userService.updateTheme(userId, theme);
     }
     
+    // 删除用户
     @DeleteMapping("/{id}")
     public Map<String, Object> deleteUser(@PathVariable("id") Integer id) {
         return userService.deleteUser(id);

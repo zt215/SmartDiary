@@ -22,10 +22,12 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private SmsService aliyunSmsService;
-    
+    // UID起始值
     private static final long UID_START = 10_000_000L;
+    // 邮箱正则表达式
     private static final java.util.regex.Pattern EMAIL_PATTERN =
             java.util.regex.Pattern.compile("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
+    // 密码正则表达式
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
             java.util.regex.Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*#?&]{8,}$");
 
@@ -34,13 +36,13 @@ public class UserServiceImpl implements UserService {
         return DigestUtils.md5DigestAsHex(str.getBytes(StandardCharsets.UTF_8));
     }
 
+
     private String normalizeEmail(String email) {
         if (!StringUtils.hasText(email)) {
             return null;
         }
         return email.trim();
     }
-
     private String validateEmailOptional(String email) {
         if (email == null) {
             return null;
@@ -76,7 +78,6 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // 检查用户名是否已存在
             User existingUser = userMapper.findByName(user.getName());
             if (existingUser != null) {
                 result.put("success", false);
@@ -84,7 +85,6 @@ public class UserServiceImpl implements UserService {
                 return result;
             }
             
-            // 检查手机号是否已存在
             User existingPhoneUser = userMapper.findByPhone(user.getPhone());
             if (existingPhoneUser != null) {
                 result.put("success", false);
@@ -99,6 +99,7 @@ public class UserServiceImpl implements UserService {
                 result.put("message", emailError);
                 return result;
             }
+
             String emailUsed = checkEmailAvailable(user.getEmail(), null);
             if (emailUsed != null) {
                 result.put("success", false);
@@ -120,7 +121,6 @@ public class UserServiceImpl implements UserService {
             // 密码加密处理
             user.setPassword(md5(user.getPassword()));
 
-            // 保存用户信息
             int rowsAffected = userMapper.insert(user);
             if (rowsAffected > 0) {
                 result.put("success", true);
@@ -153,7 +153,6 @@ public class UserServiceImpl implements UserService {
             User user = userMapper.findByEmail(trimmed);
             if (user != null) return user;
         }
-        // Fallback: phone
         return userMapper.findByPhone(trimmed);
     }
 
