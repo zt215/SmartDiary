@@ -39,14 +39,9 @@
 
 ## 📸 应用截图
 
-<!-- 在此处添加应用截图 -->
-<!-- 
-![登录页面](screenshots/login.png)
-![首页](screenshots/home.png)
-![日记编辑](screenshots/editor.png)
-![日记圈](screenshots/circle.png)
-![好友列表](screenshots/friends.png)
--->
+image.png
+image.png
+image.png
 
 ## 🛠 技术栈
 
@@ -114,7 +109,7 @@ SmartDiary/
 
 1. 克隆项目
 ```bash
-git clone https://github.com/yourusername/SmartDiary.git
+git clone https://github.com/zt215/SmartDiary.git
 cd SmartDiary/back
 ```
 
